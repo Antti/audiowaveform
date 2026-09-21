@@ -39,3 +39,9 @@ claim that the whole integration was rewritten without prior source exposure.
 | `bindings/ruby/test/release_test.rb` | `b6fede6b9182f416f83463958239ddc08a9bd3efcf139c29fbb93c65f85ef6bb` |
 | `.github/workflows/ruby.yml` | `c9d9589e9869386cc2fefbe16b4a50792e8df11fed4ab6119b047799a50f9760` |
 | `.github/workflows/ruby-native.yml` | `7d720e0646e61da23976ed8ff1f151339a5bdbb0abbd822e22a74408f634e9f8` |
+| `.github/workflows/ruby-release.yml` | `41c7f22340a5e63006b90414d63b560b53fd64e260c590a8ffd7b7dd192e5a93` |
+
+The personal release workflow was restored after the author selected the dual
+license. It originated in `03f1582` and `5f8bbae`; no former core or BBC workflow
+was copied with it. Its tests, native packaging, and publishing helper now use
+the replacement repository's sources and license checks.

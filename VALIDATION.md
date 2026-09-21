@@ -1,8 +1,8 @@
 # Validation
 
-Validated on macOS arm64, Rust 1.98.1, on 2026-09-21. This report covers the
-new Rust core and the Ruby integration below. It does not assert license
-clearance or cross-platform binary verification.
+Validated locally on macOS arm64, Rust 1.98.1, and in GitHub Actions on
+2026-09-21. This report covers the new Rust core and the Ruby integration
+below. It does not assert legal clearance.
 
 ## Correctness and boundaries
 
@@ -112,12 +112,21 @@ array is an intentional allocation. `Waveform::allocated_bytes()` reports the
 retained native capacity for ObjectSpace; transient decoding buffers are not
 counted as retained waveform storage.
 
-The configured Linux/macOS/Windows, glibc/musl, and Ruby 3.2/3.3/3.4/4.0 CI
-matrix has not been run remotely for this new repository. Ruby 3.2 and 3.3
-were not available in this local check. The publishing workflow has not been
-carried over; build/test workflows and the guarded publishing helper are local.
-Final crate naming and full platform release checks
-remain future work. The legacy repository is preserved at
+Remote checks passed for the dual-licensed sources at `e7ec5aa`:
+
+- [Rust CI](https://github.com/Antti/audiowaveform/actions/runs/35603312670)
+  passed formatting, Clippy, and tests.
+- [Ruby CI](https://github.com/Antti/audiowaveform/actions/runs/35603312772)
+  passed on Ruby 3.2/3.3/3.4/4.0, macOS and Windows, including source packaging.
+- [Native gems](https://github.com/Antti/audiowaveform/actions/runs/35603312759)
+  passed all seven platform builds and 28 installation checks across Ruby
+  3.2/3.3/3.4/4.0: x86_64 and aarch64 Linux with glibc or musl, x86_64 and arm64
+  macOS, and x64 Windows UCRT.
+
+The `0.3.0` version bump passed the release-helper tests and an isolated source
+gem installation with all numeric vectors and codec checks. The restored
+release workflow repeats the Ruby and native matrix before publishing a tag.
+Final Rust crate naming and crates.io publishing remain future work.
+The legacy repository is preserved at
 [Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy);
-the active repository has independent history. No replacement gem or crate has
-been published.
+the active repository has independent history.

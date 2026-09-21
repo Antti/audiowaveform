@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0.pre.1 (unreleased)
+## 0.3.0 (2026-09-21)
 
 - Use the replacement streaming core and newly generated test media.
 - Keep exact `points:`, mono/split channels, normalization, metadata and point lookup.

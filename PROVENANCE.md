@@ -41,7 +41,7 @@ independence or ownership by themselves.
 On 2026-09-21, the author selected `MIT OR Apache-2.0` for the replacement Rust
 core and reviewed personal Ruby integration. Both license texts and the choice
 of terms are included in source/native gems; see [LICENSE.md](LICENSE.md).
-The Ruby prerelease is `0.3.0.pre.1`; crates.io publishing remains disabled
+The replacement Ruby release line starts at `0.3.0`; crates.io publishing remains disabled
 pending final crate naming. No old GPL code or release is relicensed by this
 project. The provenance limitations above remain applicable; license selection
 and a new Git history do not themselves establish legal independence.

@@ -1,7 +1,7 @@
 # AudioWaveform for Ruby
 
 A native Ruby interface to the streaming Rust core. Ruby 3.2 or newer is required.
-This `0.3.0.pre.1` build is not published. The replacement is licensed under
+Version 0.3.0 uses the replacement core. It is licensed under
 MIT or Apache-2.0, at your option; see the root [license notice](../../LICENSE.md).
 
 ```ruby
@@ -82,5 +82,10 @@ ruby bindings/ruby/script/test_native_gem.rb PATH_TO_NATIVE_GEM
 
 The normal rake task compiles, runs contract/codec/GC/cancellation tests, and
 validates RBS. Source installation is checked with
-`ruby bindings/ruby/script/test_source_gem.rb pkg/audiowaveform-0.3.0.pre.1.gem`.
+`ruby bindings/ruby/script/test_source_gem.rb pkg/audiowaveform-0.3.0.gem`.
 Native cross-builds and ABI checks are configured in `.github/workflows`.
+
+Release tags use `ruby-vX.Y.Z`. The release workflow verifies the tag against
+the gem version, runs Ruby tests and the complete native build/install matrix,
+then publishes through RubyGems Trusted Publishing and attaches the gems to a
+GitHub release. Manual workflow runs perform the checks without publishing.
