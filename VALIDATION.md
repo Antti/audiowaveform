@@ -203,11 +203,11 @@ MP3 gapless checks. Both unpublished Rust packages remain at 0.1.0.
 ## AAC/MP4 playback trimming (unreleased)
 
 Local all-feature, no-default-feature, and M4A-only Rust tests pass, along with
-formatting and strict all-target Clippy for both workspaces. Seven parser tests
+formatting and strict all-target Clippy for both workspaces. Ten parser tests
 cover edit-list/header versions 0/1, different movie/media/sample clocks, selected
 track IDs, partial packet boundaries, malformed/truncated atoms and timing
 tables, unsupported edits, overflow, cancellation, and shared-file cursor
-restoration. Six integration tests decode newly generated AAC fixtures and
+restoration. Eight integration tests decode newly generated AAC fixtures and
 compare peaks with independent batch arithmetic over the known playback slice.
 
 The 44.1 kHz 50 ms fixture decodes to 4,096 raw frames but retains exactly 2,205
@@ -224,7 +224,21 @@ and 30-second mono AAC at 44.1 kHz, each producing 110 points, reports identical
 application capacities: 8,192 bytes of sample scratch and 456 bytes of
 peak/current storage. Decoder/container allocations are outside these figures.
 
-Ruby 4.0.5 passes 73 tests / 1,533 assertions and RBS validation. An isolated
+Ruby 4.0.5 passes 73 tests / 1,601 assertions and RBS validation. An isolated
 source-gem installation passes the numeric/codec/PCM checks plus an AAC check
 requiring a 50 ms duration and 110 points. This is a local development build of
 the unchanged 0.4.0 package version, not a published release.
+
+The compatibility follow-up covers leading empty edits (including versions 0/1
+and summed movie-clock durations), coarse media timestamps with and without an
+edit, and a final media timestamp rounded beyond the decoded sample count.
+An FFmpeg start-offset remux now yields a 150 ms waveform including its leading
+silence. Both passes use that same timeline. Millisecond-clock fixtures retain
+the frames inside their declared ranges without failing exact-time equality;
+rounding past decoded EOF is clamped, while full-tick jumps, cumulative drift,
+and larger shortages still fail. Source-gem smoke tests exercise both fixes.
+
+Increasing a leading empty edit to ten seconds preserves application buffer
+capacities with fixed and normalized gain at 110 points. A much larger empty
+edit is cancelled during generation in both resolution modes, without building
+a whole-gap sample buffer. The original 50 ms regression remains covered.

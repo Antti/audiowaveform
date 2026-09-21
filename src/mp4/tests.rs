@@ -81,7 +81,7 @@ fn versions_clocks_and_selected_track() {
         ));
         let bounds = parse(&movie(version, 1000, &tracks), 7, 44100).unwrap();
         assert_eq!(
-            (bounds.start, bounds.end, bounds.media_frames),
+            (bounds.start, bounds.end, bounds.minimum_decoded_frames),
             (1024, 3229, 3229)
         );
         assert_eq!(bounds.slice(0, 1024, 0).unwrap(), 1024..1024);
@@ -129,6 +129,8 @@ fn complex_edits_and_ranges_beyond_media_are_rejected() {
             vec![(50, 1024, 0)],
             vec![(50, 1024, 131072)],
             vec![(50, 0, 65536), (50, 1024, 65536)],
+            vec![(50, 1024, 65536), (50, -1, 65536)],
+            vec![(50, -2, 65536), (50, 1024, 65536)],
             vec![(50, 5000, 65536)],
         ] {
             let bytes = movie(
@@ -142,6 +144,95 @@ fn complex_edits_and_ranges_beyond_media_are_rejected() {
             ));
         }
     }
+}
+
+#[test]
+fn leading_empty_edits_advance_movie_time_without_changing_media_range() {
+    for version in [0, 1] {
+        let edits = edit(
+            version,
+            &[(33, -1, 65536), (67, -1, 65536), (50, 1024, 65536)],
+        );
+        let bytes = movie(
+            version,
+            1000,
+            &track(1, version, 44100, &[(3, 1024), (1, 157)], &edits),
+        );
+        let bounds = parse(&bytes, 1, 44100).unwrap();
+        assert_eq!(
+            (bounds.start, bounds.end, bounds.leading_frames),
+            (1024, 3229, 4410)
+        );
+        assert!(bounds.verify(4096, 6615).is_ok());
+        assert!(bounds.verify(4096, 2205).is_err());
+    }
+    // Sum movie ticks before converting so several short gaps do not each add
+    // another rounded frame. Metadata remains constant-size for many edits.
+    let bytes = movie(
+        0,
+        3,
+        &track(
+            1,
+            0,
+            10,
+            &[(1, 10)],
+            &edit(0, &[(1, -1, 65536), (1, -1, 65536), (1, 0, 65536)]),
+        ),
+    );
+    assert_eq!(parse(&bytes, 1, 10).unwrap().leading_frames, 7);
+
+    let huge = movie(
+        1,
+        1,
+        &track(
+            1,
+            1,
+            44100,
+            &[(1, 1024)],
+            &edit(1, &[(u64::MAX, -1, 65536), (1, -1, 65536), (1, 0, 65536)]),
+        ),
+    );
+    assert!(matches!(parse(&huge, 1, 44100), Err(Error::SizeOverflow)));
+}
+
+#[test]
+fn rounded_media_timestamps_allow_less_than_one_tick_without_accumulating_drift() {
+    let bytes = movie(
+        0,
+        1000,
+        &track(1, 0, 1000, &[(2, 23), (1, 24), (1, 3)], &[]),
+    );
+    let bounds = parse(&bytes, 1, 44100).unwrap();
+    for (position, timestamp) in [(0, 0), (1024, 23), (2048, 46), (3072, 70)] {
+        assert!(bounds.slice(position, 1024, timestamp).is_ok());
+    }
+    assert!(bounds.slice(1024, 1024, 24).is_ok()); // rounded upward
+    assert!(bounds.slice(1024, 1024, 22).is_err());
+    assert!(bounds.slice(1024, 1024, 25).is_err());
+    assert!(bounds.slice(44100, 1024, 1001).is_err()); // exactly one tick
+    assert!(bounds.slice(3072, 1024, 69).is_ok());
+    assert!(bounds.slice(4096, 1024, 92).is_ok());
+    assert!(bounds.slice(5120, 1024, 115).is_err()); // repeated 23-tick drift
+    assert_eq!(bounds.end, 3220);
+    assert!(bounds.verify(4096, 3220).is_ok());
+}
+
+#[test]
+fn rounded_media_end_is_clamped_to_decoded_frames_but_truncation_is_rejected() {
+    let bytes = movie(
+        0,
+        1000,
+        &track(1, 0, 1000, &[(2, 23), (1, 24), (1, 23)], &[]),
+    );
+    let bounds = parse(&bytes, 1, 44100).unwrap();
+    assert_eq!(bounds.end, 4102); // 93 ms, rounded beyond 4,096 decoded frames
+    assert!(bounds.verify(4096, 4096).is_ok());
+    assert!(bounds.verify(3072, 3072).is_err());
+    assert!(bounds.verify(4096, 4102).is_err());
+    let bytes = movie(0, 1000, &track(1, 0, 1000, &[(4, 24)], &[]));
+    assert!(parse(&bytes, 1, 44100).unwrap().verify(4096, 4096).is_err());
+    let exact = movie(0, 44100, &track(1, 0, 44100, &[(4, 1024)], &[]));
+    assert!(parse(&exact, 1, 44100).unwrap().verify(4095, 4095).is_err());
 }
 
 #[test]

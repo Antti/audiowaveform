@@ -1,5 +1,6 @@
 //! AAC playback bounds from ISO BMFF timing, without loading media or tables.
-//! The supported edit is one contiguous, unit-rate media segment. References:
+//! Supports leading empty edits and one contiguous, unit-rate media segment.
+//! References:
 //! <https://developer.apple.com/documentation/quicktime-file-format/edit_list_atom>
 //! <https://developer.apple.com/documentation/quicktime-file-format/time-to-sample_atom>
 
@@ -22,16 +23,19 @@ pub(crate) struct Playback {
     timescale: u32,
     start: u64,
     end: u64,
-    media_frames: u64,
+    minimum_decoded_frames: u64,
+    pub leading_frames: u64,
 }
 
 impl Playback {
     pub fn slice(self, position: u64, frames: usize, pts: i64) -> Result<Range<usize>, Error> {
         let timestamp = u64::try_from(pts).map_err(|_| INVALID)?;
-        // This range is indexed in decoded frames. Do not silently apply it to
-        // discontinuous or retimed packets, or to an upstream pre-trimmed stream.
-        if u128::from(timestamp) * u128::from(self.rate)
-            != u128::from(position) * u128::from(self.timescale)
+        // Packet boundaries may be rounded to media-clock ticks. Compare each
+        // absolute timestamp with decoded time, allowing less than one tick;
+        // do not accumulate a per-packet allowance that could hide real drift.
+        if (u128::from(timestamp) * u128::from(self.rate))
+            .abs_diff(u128::from(position) * u128::from(self.timescale))
+            >= u128::from(self.rate)
         {
             return Err(Error::InvalidAudio("non-contiguous AAC/MP4 sample timing"));
         }
@@ -41,7 +45,15 @@ impl Playback {
     }
 
     pub fn verify(self, decoded: u64, retained: u64) -> Result<(), Error> {
-        if decoded < self.media_frames || retained != self.end - self.start {
+        // A coarse final timestamp can round slightly beyond the decoded end.
+        // Clamp to the frames actually available, never synthesize AAC padding.
+        let expected = self
+            .end
+            .min(decoded)
+            .saturating_sub(self.start)
+            .checked_add(self.leading_frames)
+            .ok_or(Error::SizeOverflow)?;
+        if decoded < self.minimum_decoded_frames || retained != expected {
             return Err(Error::InvalidAudio("truncated AAC/MP4 playback range"));
         }
         Ok(())
@@ -75,6 +87,12 @@ struct Atom {
     kind: [u8; 4],
     data: u64,
     end: u64,
+}
+
+struct Edit {
+    start: u64,
+    duration: u64,
+    leading: u64,
 }
 
 struct Parser<'a, R, C> {
@@ -132,8 +150,12 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
             },
             None => None,
         };
-        let (start, end) = match edit {
-            Some((start, duration)) => {
+        let (start, end, leading_frames) = match edit {
+            Some(Edit {
+                start,
+                duration,
+                leading,
+            }) => {
                 let start_frame = frames(u128::from(start), media_scale, rate)?;
                 // Add in rational time before rounding, and clamp rounded movie
                 // duration to the sample table's precise end of media.
@@ -146,19 +168,39 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
                 let end_frame = u64::try_from(numerator.div_ceil(denominator))
                     .map_err(|_| Error::SizeOverflow)?
                     .min(media_frames);
-                (start_frame, end_frame)
+                (
+                    start_frame,
+                    end_frame,
+                    frames(u128::from(leading), movie_scale, rate)?,
+                )
             }
-            None => (0, media_frames),
+            None => (0, media_frames, 0),
         };
         if start > end {
             return Err(INVALID);
         }
+        // Require decoded time to lie strictly after the preceding media tick.
+        // With a sample-rate clock this still requires every declared frame.
+        let minimum_decoded_frames = if media_duration == 0 {
+            0
+        } else {
+            u64::try_from(
+                u128::from(media_duration - 1) * u128::from(rate) / u128::from(media_scale),
+            )
+            .map_err(|_| Error::SizeOverflow)?
+            .checked_add(1)
+            .ok_or(Error::SizeOverflow)?
+        };
+        leading_frames
+            .checked_add(end - start)
+            .ok_or(Error::SizeOverflow)?;
         Ok(Some(Playback {
             rate,
             timescale: media_scale,
             start,
             end,
-            media_frames,
+            minimum_decoded_frames,
+            leading_frames,
         }))
     }
 
@@ -267,7 +309,7 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
         Ok(duration)
     }
 
-    fn edit(&mut self, atom: Atom) -> Result<Option<(u64, u64)>, Error> {
+    fn edit(&mut self, atom: Atom) -> Result<Option<Edit>, Error> {
         let version = self.version(atom)?;
         let entries = u32::from_be_bytes(self.bytes(atom, 4)?);
         let width = match version {
@@ -281,25 +323,39 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
         if entries == 0 {
             return Ok(None);
         }
-        if entries != 1 {
-            return Err(UNSUPPORTED_EDIT);
+        let mut leading = 0_u64;
+        for index in 0..entries {
+            poll(self.cancelled)?;
+            let offset = 8 + u64::from(index) * width;
+            let (duration, start, rate) = match version {
+                0 => (
+                    u64::from(u32::from_be_bytes(self.bytes(atom, offset)?)),
+                    i64::from(i32::from_be_bytes(self.bytes(atom, offset + 4)?)),
+                    u32::from_be_bytes(self.bytes(atom, offset + 8)?),
+                ),
+                _ => (
+                    u64::from_be_bytes(self.bytes(atom, offset)?),
+                    i64::from_be_bytes(self.bytes(atom, offset + 8)?),
+                    u32::from_be_bytes(self.bytes(atom, offset + 16)?),
+                ),
+            };
+            if rate != 0x0001_0000 {
+                return Err(UNSUPPORTED_EDIT);
+            }
+            if start == -1 {
+                leading = leading.checked_add(duration).ok_or(Error::SizeOverflow)?;
+            } else if start >= 0 && index == entries - 1 {
+                return Ok(Some(Edit {
+                    start: start as u64,
+                    duration,
+                    leading,
+                }));
+            } else {
+                return Err(UNSUPPORTED_EDIT);
+            }
         }
-        let (duration, start, rate) = match version {
-            0 => (
-                u64::from(u32::from_be_bytes(self.bytes(atom, 8)?)),
-                i64::from(i32::from_be_bytes(self.bytes(atom, 12)?)),
-                u32::from_be_bytes(self.bytes(atom, 16)?),
-            ),
-            _ => (
-                u64::from_be_bytes(self.bytes(atom, 8)?),
-                i64::from_be_bytes(self.bytes(atom, 16)?),
-                u32::from_be_bytes(self.bytes(atom, 24)?),
-            ),
-        };
-        if start < 0 || rate != 0x0001_0000 {
-            return Err(UNSUPPORTED_EDIT);
-        }
-        Ok(Some((start as u64, duration)))
+        // A sequence of empty edits with no media segment has no audio range.
+        Err(UNSUPPORTED_EDIT)
     }
 }
 

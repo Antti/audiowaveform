@@ -104,3 +104,7 @@ was read or reused for this change. New arithmetic tone/silence fixtures and
 encoding commands are recorded in `tests/build_aac_fixtures.py` and
 `tests/fixtures/aac/manifest.json`. Peak expectations use independent batch
 arithmetic over untrimmed Symphonia output sliced at known fixture boundaries.
+The compatibility follow-up adds an FFmpeg start-offset remux and newly
+constructed millisecond timing tables. Expected leading silence follows Apple's
+[empty-edit definition](https://developer.apple.com/documentation/quicktime-file-format/edit_list_atom/edit_list_table);
+timing uses the documented [media timescale](https://developer.apple.com/documentation/quicktime-file-format/media_header_atom/time_scale).

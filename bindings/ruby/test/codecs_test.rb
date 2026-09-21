@@ -16,6 +16,7 @@ class CodecsTest < Minitest::Test
           assert_equal(split ? entry.fetch("channels") : 1, w.channels)
           assert_equal w.data.map { |value| (value.fdiv(256)).truncate }, w.data(bits: 8)
           assert w.data.all?(&:zero?) if entry.fetch("signal") == "silence"
+          assert_equal [0, 0], w.point(0) if entry.fetch("leading_frames", 0) > 0
           if entry.fetch("signal") == "edges"
             assert_equal [0, 0], w.point(0)
             assert_equal [0, 0], w.point(w.length - 1)

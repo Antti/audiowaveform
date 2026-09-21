@@ -113,7 +113,11 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
             .unwrap_or_else(|| case["frames"].as_u64().unwrap()) as usize;
         let rate = case["rate"].as_u64().unwrap() as u32;
         let decoded = raw(&path);
-        let audible = &decoded[1024 * channels..(1024 + frames) * channels];
+        let start = case["media_start"].as_u64().unwrap_or(1024) as usize;
+        let leading = case["leading_frames"].as_u64().unwrap_or(0) as usize;
+        let mut audible = vec![0.0; leading * channels];
+        audible
+            .extend_from_slice(&decoded[start * channels..(start + frames - leading) * channels]);
         for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(23)] {
             for channels_mode in [ChannelMode::Mono, ChannelMode::Split] {
                 for gain in [Gain::Fixed(1.0), Gain::Normalize] {
@@ -134,7 +138,7 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
                             1
                         }
                     );
-                    let peaks = expected(audible, channels, options);
+                    let peaks = expected(&audible, channels, options);
                     assert_eq!(waveform.data16(), peaks, "{name} {options:?}");
                     assert_eq!(
                         waveform.data8().collect::<Vec<_>>(),
@@ -148,6 +152,9 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
                         // first/last peaks even when normalization is requested.
                         assert_eq!(peaks.first(), Some(&0));
                         assert_eq!(peaks.last(), Some(&0));
+                    }
+                    if leading > 0 {
+                        assert_eq!(waveform.point(0, 0), Some([0, 0]));
                     }
                 }
             }
@@ -270,5 +277,79 @@ fn impossible_sample_table_end_is_an_error_in_both_modes() {
             )
             .is_err()
         );
+    }
+}
+
+#[test]
+fn coarse_media_clock_does_not_hide_missing_packets_or_real_timestamp_jumps() {
+    let original = std::fs::read(fixture("rounded-media-end.m4a")).unwrap();
+    let table = atom(
+        &original,
+        &[*b"moov", *b"trak", *b"mdia", *b"minf", *b"stbl", *b"stts"],
+    );
+    for (offset, value) in [(12, 22_u32), (28, 24)] {
+        let mut bytes = original.clone();
+        bytes[table + offset..table + offset + 4].copy_from_slice(&value.to_be_bytes());
+        let file = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(file.path(), bytes).unwrap();
+        for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(23)] {
+            assert!(
+                generate(
+                    file.path(),
+                    Options {
+                        resolution,
+                        ..Options::default()
+                    }
+                )
+                .is_err()
+            );
+        }
+    }
+}
+
+#[test]
+fn leading_silence_reuses_buffers_and_remains_cancellable() {
+    let original = std::fs::read(fixture("offset.m4a")).unwrap();
+    let edit = atom(&original, &[*b"moov", *b"trak", *b"edts", *b"elst"]);
+    for gain in [Gain::Fixed(1.0), Gain::Normalize] {
+        let options = Options {
+            resolution: Resolution::Points(110),
+            gain,
+            ..Options::default()
+        };
+        let short = generate(fixture("offset.m4a"), options).unwrap();
+        let mut longer = original.clone();
+        longer[edit + 8..edit + 12].copy_from_slice(&441_000_u32.to_be_bytes());
+        let file = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(file.path(), longer).unwrap();
+        let long = generate(file.path(), options).unwrap();
+        assert_eq!(long.source_frames(), 441_000 + 3229);
+        assert_eq!(
+            long.statistics().scratch_capacity_bytes,
+            short.statistics().scratch_capacity_bytes
+        );
+        assert_eq!(
+            long.statistics().peak_capacity_bytes,
+            short.statistics().peak_capacity_bytes
+        );
+    }
+    let mut bytes = original;
+    bytes[edit + 8..edit + 12].copy_from_slice(&u32::MAX.to_be_bytes());
+    let file = tempfile::NamedTempFile::new().unwrap();
+    std::fs::write(file.path(), bytes).unwrap();
+    for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(256)] {
+        let mut polls = 0;
+        let result = waveform_core::generate_with_cancel(
+            file.path(),
+            Options {
+                resolution,
+                ..Options::default()
+            },
+            || {
+                polls += 1;
+                polls == 500
+            },
+        );
+        assert!(matches!(result, Err(waveform_core::Error::Cancelled)));
     }
 }

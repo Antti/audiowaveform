@@ -194,6 +194,41 @@ struct Scan {
     track: u32,
 }
 
+fn resize_scratch(scratch: &mut Vec<f64>, size: usize) -> Result<(), Error> {
+    if size > scratch.len() {
+        scratch.try_reserve(size - scratch.len())?;
+    }
+    scratch.resize(size, 0.0);
+    Ok(())
+}
+
+/// Advance the playback timeline through empty edits using the same bounded
+/// buffer as decoded audio, including during the counting pass and replay.
+fn consume_silence<C: FnMut() -> bool>(
+    mut progress: Scan,
+    remaining: &mut u64,
+    scratch: &mut Vec<f64>,
+    cancelled: &mut C,
+    consume: &mut impl FnMut(Scan, &[f64], &mut C) -> Result<(), Error>,
+) -> Result<u64, Error> {
+    while *remaining > 0 {
+        poll(cancelled)?;
+        let count = (*remaining).min(1024) as usize;
+        let size = count
+            .checked_mul(progress.signal.channels)
+            .ok_or(Error::SizeOverflow)?;
+        resize_scratch(scratch, size)?;
+        scratch.fill(0.0);
+        progress.frames = progress
+            .frames
+            .checked_add(count as u64)
+            .ok_or(Error::SizeOverflow)?;
+        consume(progress, scratch, cancelled)?;
+        *remaining -= count as u64;
+    }
+    Ok(progress.frames)
+}
+
 struct Source {
     hint: Hint,
     metadata: File,
@@ -315,6 +350,7 @@ impl Session {
         let mut observed = None;
         let mut frames = 0_u64;
         let mut decoded_frames = 0_u64;
+        let mut leading = self.playback.map_or(0, |playback| playback.leading_frames);
         let mut demux_error = None;
         loop {
             poll(cancelled)?;
@@ -356,6 +392,17 @@ impl Session {
             decoded_frames = decoded_frames
                 .checked_add(u64::try_from(decoded.frames()).map_err(|_| Error::SizeOverflow)?)
                 .ok_or(Error::SizeOverflow)?;
+            frames = consume_silence(
+                Scan {
+                    signal,
+                    frames,
+                    track: self.track,
+                },
+                &mut leading,
+                scratch,
+                cancelled,
+                &mut consume,
+            )?;
             if range.is_empty() {
                 continue;
             }
@@ -363,10 +410,7 @@ impl Session {
                 .frames()
                 .checked_mul(signal.channels)
                 .ok_or(Error::SizeOverflow)?;
-            if size > scratch.len() {
-                scratch.try_reserve(size - scratch.len())?;
-            }
-            scratch.resize(size, 0.0);
+            resize_scratch(scratch, size)?;
             decoded.copy_to_slice_interleaved(scratch.as_mut_slice());
             frames = frames
                 .checked_add(u64::try_from(range.len()).map_err(|_| Error::SizeOverflow)?)
@@ -402,9 +446,6 @@ impl Session {
         if self.decoder.finalize().verify_ok == Some(false) {
             return Err(Error::InvalidAudio("decoder verification failed"));
         }
-        if let Some(playback) = self.playback {
-            playback.verify(decoded_frames, frames)?;
-        }
         let signal = match observed {
             Some(signal) => signal,
             None => {
@@ -422,6 +463,22 @@ impl Session {
                 Signal { rate, channels }
             }
         };
+        // Empty media may still have a declared leading gap and valid signal
+        // metadata; emit that timeline even when no decoder block was returned.
+        frames = consume_silence(
+            Scan {
+                signal,
+                frames,
+                track: self.track,
+            },
+            &mut leading,
+            scratch,
+            cancelled,
+            &mut consume,
+        )?;
+        if let Some(playback) = self.playback {
+            playback.verify(decoded_frames, frames)?;
+        }
         Ok((
             stream,
             Scan {

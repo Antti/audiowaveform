@@ -104,18 +104,22 @@ AAC-LC decoding targets mono/stereo. Multichannel AAC, HE-AAC, Opus, and Wave64
 are outside this revision. Codec availability is separate from container
 recognition. Decoder gapless trimming is enabled, removing delay/padding where
 Symphonia supplies it (including MP3 and Vorbis priming). Duration counts the
-frames retained after trimming.
+playback frames retained after trimming, including silence from supported
+leading empty MP4 edits.
 
 For nonfragmented AAC/MP4, the core reads the selected track's edit list and
 sample timing table. It decodes priming packets normally, then excludes frames
 outside the playback range before counting or aggregating peaks in either pass.
-This supports a single contiguous edit at normal speed and preserves genuine
-silence. Edit duration uses the movie timescale, so coarse metadata can still
-round playback by a fraction of a millisecond. The sample table caps the end.
+This supports leading empty edits followed by a single contiguous media edit
+at normal speed. Empty edits contribute silence on the playback timeline;
+genuine recorded silence is also preserved. Edit duration uses the movie
+timescale, and packet timestamps may be rounded by less than one media-clock
+tick. The sample table and available decoded frames cap the end. Coarse
+metadata can still round the reported playback duration.
 No edit means no assumed leading delay. Fragmented MP4 and iTunSMPB-only delay
 metadata are not covered; their duration can still differ from playback.
-Multiple edits, empty edits, and non-unit playback rates return an error;
-decode those inputs to PCM externally and use `generate_pcm`.
+Multiple media edits, empty edits after media, and non-unit playback rates
+return an error; decode those inputs to PCM externally and use `generate_pcm`.
 
 Track selection uses explicit default-audio flags exposed by Symphonia, then
 the first reported audio track. Unsupported selected audio is an error.

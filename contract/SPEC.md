@@ -11,8 +11,9 @@ PCM stream and returns waveform peaks in memory. A frame is one time instant con
 channel. A point is a minimum/maximum pair for each output channel. Resolution
 arguments count **frames**, despite the historical `samples_per_pixel` name.
 
-Let `N` be the actual number of decoded frames, `F` the positive sample rate,
-and `C` the output channel count. Container duration estimates must not determine
+Let `N` be the number of playback frames (retained decoded frames plus silence
+from supported leading empty edits), `F` the positive sample rate,
+and `C` the output channel count. General container duration estimates must not determine
 `N`, point boundaries, or the returned duration. Channel count and sample rate
 must remain constant throughout the selected track; otherwise return an error.
 
@@ -28,19 +29,25 @@ This is an acceptance target, not a claim of completed decoder coverage.
 Codec availability is distinct from container recognition. Multichannel AAC,
 HE-AAC, Opus, and Wave64 are not required for the first replacement.
 
-Enable decoder-provided gapless trimming. `N` counts frames actually delivered
-after trimming; count and aggregation passes use identical
+Enable decoder-provided gapless trimming. Count and aggregation passes use identical
 settings. Do not manually subtract delay a second time. MP3 delay/padding and
 Vorbis priming must not create extra leading buckets. Available trimming depends
 on the codec/container metadata exposed by Symphonia, with this additional rule:
 nonfragmented AAC/MP4 uses the selected track's media timescale, time-to-sample
-table, and optional single unit-rate edit. Decode all packets, including priming,
+table, and optional single unit-rate media edit, preceded by zero or more empty
+edits. Decode all packets, including priming,
 but retain only frames whose timestamps lie in that half-open playback range,
 capped at the sample table's end. Apply the same range in each pass. Never infer
 delay from silence or a fixed encoder-specific constant. Missing edits mean no
-assumed leading delay; movie-timescale rounding remains part of the metadata.
-Reject complex edits (multiple, empty, dwell, or non-unit rate) and inconsistent
-packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
+assumed encoder delay. Sum leading empty-edit durations in movie ticks before
+converting to frames (rounding up), and prepend that many zero frames using
+bounded buffers. Those frames are part of `N`, duration, and bucket placement.
+Allow absolute packet timestamps to differ from decoded time by less than one
+media-clock tick, without accumulating that allowance per packet. A media end
+rounded beyond decoded audio by less than one tick is clamped to the actual
+end; larger shortages remain errors. Sample-rate clocks retain exact checks.
+Reject multiple media edits, empty edits after media, dwell/non-unit rates, and
+inconsistent packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
 metadata is not interpreted. Raw PCM receives no automatic trimming.
 
 ## 2. Ruby generation API

@@ -150,6 +150,21 @@
       "-movie_timescale",
       "44100",
       "$FIXTURES/tracks.mp4"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-itsoffset",
+      "0.1",
+      "-i",
+      "$FIXTURES/short-44100.m4a",
+      "-c:a",
+      "copy",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/offset.m4a"
     ]
   ],
   "cases": [
@@ -217,13 +232,54 @@
       "channels": 1,
       "signal": "tone",
       "fragmented": true
+    },
+    {
+      "file": "offset.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone",
+      "media_start": 0,
+      "leading_frames": 3386,
+      "playback_frames": 6615
+    },
+    {
+      "file": "coarse-media-clock.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone",
+      "media_start": 0,
+      "playback_frames": 3220
+    },
+    {
+      "file": "rounded-media-end.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone",
+      "media_start": 0,
+      "playback_frames": 4096
+    },
+    {
+      "file": "coarse-media-edit.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone",
+      "media_start": 1015,
+      "playback_frames": 2205
     }
   ],
   "sha256": {
+    "coarse-media-clock.m4a": "a1ed308d226172d55f1e397d9c0f5d208d68c13dc585baa3f29b6ce0795818db",
+    "coarse-media-edit.m4a": "e62b977178f0424dddc8247c4988e1b49d5299d13f1217aecadf2b0dea43b4bb",
     "coarse-movie-clock.m4a": "ed859c61f91d14705d2af4c7fc45115922fc0e059041e439d3c2941cc1f6d3cf",
     "fragmented.m4a": "1daf4b0b58d3bb0a093603c591c90d49e59b61aeb17e482c5c9170440fdc76df",
     "odd.m4a": "91848ab432a0efc0d3d3898b69fa63b1098556bb769ad828f5ce65ef3ffcdc7b",
+    "offset.m4a": "47e3f10801b1bd6f60762394d1f734dcfe773e7b6bfb648570316b121377d34b",
     "one.m4a": "46b8c5115416dd7b9eefbd4360a4109ec961c3a082ddfe101fa93c7ab57be3ad",
+    "rounded-media-end.m4a": "e475888ec8d05a4fcdf65a0aa7543dc37f7b2df98d2f01d9e456319eb822ad94",
     "short-32000.m4a": "9d6bc68de9733c91f217b22eae062683cf46bbefd9f7f07c1ae26a00453a5af5",
     "short-44100.m4a": "9c192436067b8426974122e3d38fdcce804749c0d97efdcfdde80047faf34039",
     "short-48000.m4a": "44c81e3bfc90b5f27c18eb71961730dcf258e13340fe7f8a06507f279badde25",

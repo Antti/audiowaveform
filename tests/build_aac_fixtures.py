@@ -53,6 +53,54 @@ with tempfile.TemporaryDirectory() as temporary:
     subprocess.run(command, check=True)
     commands.append([part.replace(str(ROOT), "$FIXTURES") for part in command])
 
+    command = ["ffmpeg", "-v", "error", "-y", "-itsoffset", "0.1", "-i",
+               str(ROOT / "short-44100.m4a"), "-c:a", "copy", "-movie_timescale", "44100",
+               str(ROOT / "offset.m4a")]
+    subprocess.run(command, check=True)
+    commands.append([part.replace(str(ROOT), "$FIXTURES") for part in command])
+    cases.append(dict(file="offset.m4a", rate=44100, frames=2205, channels=1,
+                      signal="tone", media_start=0, leading_frames=3386, playback_frames=6615))
+
+
+def coarse_media_clock(data, end, with_edit):
+    """Re-express known packet boundaries in millisecond media ticks.
+
+    moov follows mdat in this fixture, so resizing tables preserves offsets.
+    Round 0,1024,2048,3072 source frames to 0,23,46,70 ms. End=73 rounds the
+    original short last packet; end=93 describes all 4096 decoded frames.
+    """
+    result, position = bytearray(), 0
+    while position < len(data):
+        size, kind = struct.unpack_from(">I4s", data, position)
+        assert size >= 8
+        payload = bytearray(data[position + 8:position + size])
+        if kind in (b"moov", b"trak", b"mdia", b"minf", b"stbl", b"edts"):
+            payload = coarse_media_clock(payload, end, with_edit)
+        elif kind in (b"mdhd", b"mvhd"):
+            payload[12:20] = struct.pack(">II", 1000, end if kind == b"mdhd" or not with_edit else 50)
+        elif kind == b"tkhd":
+            payload[20:24] = struct.pack(">I", 50 if with_edit else end)
+        elif kind == b"elst":
+            if with_edit:
+                payload[8:16] = struct.pack(">Ii", 50, 23)
+            else:
+                kind = b"free"
+        elif kind == b"stts":
+            payload = bytes(4) + struct.pack(">IIIIIII", 3, 2, 23, 1, 24, 1, end - 70)
+        result.extend(struct.pack(">I4s", len(payload) + 8, kind) + payload)
+        position += size
+    return result
+
+
+for name, end, with_edit, media_start, playback_frames in [
+    ("coarse-media-clock.m4a", 73, False, 0, 3220),
+    ("rounded-media-end.m4a", 93, False, 0, 4096),
+    ("coarse-media-edit.m4a", 73, True, 1015, 2205),
+]:
+    (ROOT / name).write_bytes(coarse_media_clock((ROOT / "short-44100.m4a").read_bytes(), end, with_edit))
+    cases.append(dict(file=name, rate=44100, frames=2205, channels=1, signal="tone",
+                      media_start=media_start, playback_frames=playback_frames))
+
 manifest = dict(
     provenance="New arithmetic sine/silence signals encoded with FFmpeg; no legacy fixtures or waveform output used.",
     recipe="Signed 16-bit sine: int(12000*sin(2*pi*frequency*frame/rate)); mono 440 Hz, stereo 440/880 Hz. Edges silence first/last thirds.",

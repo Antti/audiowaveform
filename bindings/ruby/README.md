@@ -104,7 +104,8 @@ at EOF and nonfinite float samples raise `AudioWaveform::Error`.
 - `sample_rate`, `channels`, `length` (`size`), `empty?`
 - `samples_per_pixel`: nominal frames per point. For exact-count timing use
   `duration / length`; bucket widths may differ by one source frame.
-- `duration` (`duration_seconds`): decoded frames divided by sample rate.
+- `duration` (`duration_seconds`): playback frames divided by sample rate,
+  including silence from supported leading empty MP4 edits.
 - `storage_bits` (`bits`): always 16.
 - `data(bits: 16)`: a new Array of signed integers, ordered by point, channel,
   then minimum/maximum. `bits: 8` converts with signed truncation by 256.
@@ -124,10 +125,12 @@ recognition does not imply every codec is supported. Multichannel AAC, HE-AAC,
 Opus, and Wave64 are unsupported by file decoding; a caller-managed decoder can
 feed their PCM into `generate_pcm`. Decoder gapless trimming removes reported
 delay/padding, including MP3 and Vorbis priming. Nonfragmented AAC/MP4 also trims
-to the selected track's single, normal-speed edit and sample timing range in
-both passes, preserving intentional silence. Coarse edit timescales may round
-duration slightly. Fragmented MP4 and iTunSMPB-only delay metadata remain
-unsupported for gapless trimming. Multiple/empty edits or non-unit playback
+to the selected track's single, normal-speed media edit and sample timing range
+in both passes. Leading empty edits contribute silence before the audio;
+intentional recorded silence is preserved. Rounded media timestamps are
+supported, though coarse metadata may still round duration slightly.
+Fragmented MP4 and iTunSMPB-only delay metadata remain unsupported for gapless
+trimming. Multiple media edits, empty edits after media, or non-unit playback
 rates raise `AudioWaveform::Error`; use external decoding and `generate_pcm`
 for those inputs. See the root README for track-selection limits.
 
