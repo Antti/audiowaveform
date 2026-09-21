@@ -55,14 +55,16 @@ bundle dependency code.
 
 ## History cutover
 
-The user wants eventually to replace the existing remote history. This local
-project starts a new root history without modifying that remote. Ruby
-integration and local source/native package checks are recorded in
-[VALIDATION.md](VALIDATION.md). Before the cutover, finish license/notice review
-and the full cross-platform release checks. Preserve an accessible archive of
-old releases and
-their corresponding source. The remote branch replacement should be a
-deliberate cutover from the reviewed root, not a force-push from the old port.
+This project starts an independent root history at Antti/audiowaveform. The
+original repository is preserved as
+[Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy),
+including its original branches, tags, GitHub releases, and pull request history.
+Its Ruby gems 0.1.0, 0.2.0, and 0.2.1 remain published under their original terms.
+The archived release sources are not part of this project's Git ancestry.
+
+Ruby integration and source/native package checks are recorded in
+[VALIDATION.md](VALIDATION.md). The repository cutover is separate from gem/crate
+publication; release licensing and cross-platform checks still apply.
 
 ## Ruby dependency and packaging follow-up
 

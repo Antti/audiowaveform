@@ -116,5 +116,8 @@ The configured Linux/macOS/Windows, glibc/musl, and Ruby 3.2/3.3/3.4/4.0 CI
 matrix has not been run remotely for this new repository. Ruby 3.2 and 3.3
 were not available in this local check. The publishing workflow has not been
 carried over; build/test workflows and the guarded publishing helper are local.
-Final crate naming, license selection/review, full platform release checks, and
-remote-history cutover remain future work. Nothing has been published.
+Final crate naming, license selection/review, and full platform release checks
+remain future work. The legacy repository is preserved at
+[Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy);
+the active repository has independent history. No replacement gem or crate has
+been published.

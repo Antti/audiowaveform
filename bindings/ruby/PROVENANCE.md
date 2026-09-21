@@ -1,7 +1,8 @@
 # Ruby integration provenance
 
 The integration was reused with adaptations from personally authored Ruby work
-at `6b5e886f38022e8a74649db80608fa8cafef4ab1` in Antti/audiowaveform.
+at [`6b5e886f38022e8a74649db80608fa8cafef4ab1`](https://github.com/Antti/audiowaveform-legacy/commit/6b5e886f38022e8a74649db80608fa8cafef4ab1)
+in the archived Antti/audiowaveform-legacy repository.
 It was introduced by `a606414`, with subsequent Ruby integration/safety/release
 changes. The source review found no BBC implementation in this glue. The user
 confirmed personal authorship; Git attribution alone is not ownership proof.

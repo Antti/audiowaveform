@@ -107,6 +107,13 @@ tests need neither Python nor FFmpeg. Rebuilding the tiny numeric WAVs uses
 The memory measurement uses `/usr/bin/time` on macOS or Linux and creates
 ignored files under `measurements/`.
 
-See [PROVENANCE.md](PROVENANCE.md) for implementation inputs and licensing
-status. A fresh Git root is prepared locally; the old remote and its release
-tags are not changed by this work.
+## Legacy releases
+
+This repository starts an independent Git history for the replacement core and
+Ruby integration. The former implementation, its release tags, and the sources
+for Ruby gems 0.1.0, 0.2.0, and 0.2.1 are preserved in
+[audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy).
+Those gems remain available under their original GPL-3.0-or-later terms.
+
+See [PROVENANCE.md](PROVENANCE.md) for implementation inputs and the replacement's
+licensing status. Changing repositories does not relicense the legacy releases.
