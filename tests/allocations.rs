@@ -86,3 +86,26 @@ fn target_count_does_not_add_per_point_allocations_and_data8_allocates_nothing()
         "allocation counts: {counts:?}"
     );
 }
+
+#[test]
+fn pcm_push_reuses_decode_storage_without_per_block_allocations() {
+    use waveform_core::{PcmFormat, PcmStream};
+    let mut stream = PcmStream::new(
+        PcmFormat::S16Le,
+        48000,
+        1,
+        Options {
+            resolution: Resolution::FramesPerPoint(1_000_000),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    let block = [0_u8; 8192];
+    let (_, allocations) = count(|| {
+        for _ in 0..100 {
+            stream.push(&block).unwrap();
+        }
+    });
+    assert_eq!(allocations, 0);
+    assert_eq!(stream.finish().unwrap().source_frames(), 409600);
+}

@@ -1,17 +1,18 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::{
-    cell::Cell,
+    cell::{Cell, RefCell},
     ffi::{c_int, c_long, c_void},
     ptr,
     sync::atomic::{AtomicBool, Ordering},
 };
 
 use magnus::{
-    DataTypeFunctions, Error, ExceptionClass, Module, Object, RArray, Ruby, TypedData, function,
-    method, rb_sys::protect, value::ReprValue,
+    DataTypeFunctions, Error, ExceptionClass, Module, Object, RArray, RString, Ruby, TypedData,
+    function, method, rb_sys::protect, value::ReprValue,
 };
 use waveform_core::{
-    ChannelMode, Error as CoreError, Gain, Options, Resolution, Waveform, generate_with_cancel,
+    ChannelMode, Error as CoreError, Gain, Options, PcmFormat, PcmStream, Resolution, Waveform,
+    generate_with_cancel,
 };
 
 #[derive(TypedData)]
@@ -237,12 +238,7 @@ fn generate(
         "points" => Resolution::Points(scale_value),
         _ => return Err(argument_error(ruby, "unsupported waveform scale")),
     };
-    let gain = match amplitude_kind.as_str() {
-        "none" => Gain::Fixed(1.0),
-        "auto" => Gain::Normalize,
-        "fixed" => Gain::Fixed(amplitude_value),
-        _ => return Err(argument_error(ruby, "unsupported amplitude scale")),
-    };
+    let gain = amplitude(ruby, &amplitude_kind, amplitude_value)?;
     let options = Options {
         resolution,
         channels: if split_channels {
@@ -258,6 +254,122 @@ fn generate(
     })?
     .map(RubyWaveform)
     .map_err(|error| core_error(ruby, error))
+}
+
+fn amplitude(ruby: &Ruby, kind: &str, value: f64) -> Result<Gain, Error> {
+    match kind {
+        "none" => Ok(Gain::Fixed(1.0)),
+        "auto" => Ok(Gain::Normalize),
+        "fixed" => Ok(Gain::Fixed(value)),
+        _ => Err(argument_error(ruby, "unsupported amplitude scale")),
+    }
+}
+
+const PCM_READ_BYTES: usize = 32768;
+
+struct PcmState {
+    stream: Option<PcmStream>,
+    input: Vec<u8>,
+}
+
+#[derive(TypedData)]
+#[magnus(class = "AudioWaveform::Native::PcmStream", free_immediately, size)]
+struct RubyPcmStream(RefCell<PcmState>);
+
+impl DataTypeFunctions for RubyPcmStream {
+    fn size(&self) -> usize {
+        // Another Ruby thread can inspect this object while push holds the
+        // mutable borrow without GVL. Never access the native buffers then.
+        std::mem::size_of_val(self)
+            + self.0.try_borrow().map_or(0, |state| {
+                state.input.capacity() + state.stream.as_ref().map_or(0, PcmStream::allocated_bytes)
+            })
+    }
+}
+
+impl RubyPcmStream {
+    fn push(ruby: &Ruby, this: &Self, bytes: RString) -> Result<(), Error> {
+        let mut state = this
+            .0
+            .try_borrow_mut()
+            .map_err(|_| ruby_error(ruby, "PCM stream is busy"))?;
+        let PcmState { stream, input } = &mut *state;
+        let stream = stream
+            .as_mut()
+            .ok_or_else(|| ruby_error(ruby, "PCM stream is closed"))?;
+        if bytes.len() > PCM_READ_BYTES {
+            return Err(argument_error(
+                ruby,
+                "PCM read exceeded the requested block size",
+            ));
+        }
+        input.clear();
+        // SAFETY: the GVL is held. Copy into the preallocated native buffer
+        // before releasing it; another Ruby thread may mutate the source string.
+        input.extend_from_slice(unsafe { bytes.as_slice() });
+        let interrupts = Interrupts::default();
+        without_gvl(ruby, &interrupts, || {
+            stream.push_with_cancel(input, || interrupts.cancelled())
+        })?
+        .map_err(|error| core_error(ruby, error))
+    }
+
+    fn finish(ruby: &Ruby, this: &Self) -> Result<RubyWaveform, Error> {
+        let stream = this
+            .0
+            .try_borrow_mut()
+            .map_err(|_| ruby_error(ruby, "PCM stream is busy"))?
+            .stream
+            .take()
+            .ok_or_else(|| ruby_error(ruby, "PCM stream is closed"))?;
+        let interrupts = Interrupts::default();
+        without_gvl(ruby, &interrupts, || {
+            stream.finish_with_cancel(|| interrupts.cancelled())
+        })?
+        .map(RubyWaveform)
+        .map_err(|error| core_error(ruby, error))
+    }
+
+    fn close(ruby: &Ruby, this: &Self) -> Result<(), Error> {
+        let mut state = this
+            .0
+            .try_borrow_mut()
+            .map_err(|_| ruby_error(ruby, "PCM stream is busy"))?;
+        state.stream = None;
+        state.input = Vec::new();
+        Ok(())
+    }
+}
+
+fn pcm_stream(
+    ruby: &Ruby,
+    format: String,
+    sample_rate: u32,
+    channels: u16,
+    samples_per_pixel: u32,
+    split_channels: bool,
+    amplitude_spec: (String, f64),
+) -> Result<RubyPcmStream, Error> {
+    let format: PcmFormat = format.parse().map_err(|error| core_error(ruby, error))?;
+    let options = Options {
+        resolution: Resolution::FramesPerPoint(samples_per_pixel),
+        channels: if split_channels {
+            ChannelMode::Split
+        } else {
+            ChannelMode::Mono
+        },
+        gain: amplitude(ruby, &amplitude_spec.0, amplitude_spec.1)?,
+    };
+    let stream = PcmStream::new(format, sample_rate, channels, options)
+        .map_err(|error| core_error(ruby, error))?;
+    let mut input = Vec::new();
+    input
+        .try_reserve_exact(PCM_READ_BYTES)
+        .map_err(|error| core_error(ruby, CoreError::from(error)))?;
+    Ok(RubyPcmStream(RefCell::new(PcmState {
+        stream: Some(stream),
+        input,
+    })))
 }
 
 fn core_error(ruby: &Ruby, error: CoreError) -> Error {
@@ -286,6 +398,11 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
 
     let native = module.define_module("Native")?;
     native.define_singleton_method("generate", function!(generate, 6))?;
+    native.define_singleton_method("pcm_stream", function!(pcm_stream, 6))?;
+    let pcm = native.define_class("PcmStream", ruby.class_object())?;
+    pcm.define_method("push", method!(RubyPcmStream::push, 1))?;
+    pcm.define_method("finish", method!(RubyPcmStream::finish, 0))?;
+    pcm.define_method("close", method!(RubyPcmStream::close, 0))?;
 
     let waveform = module.define_class("Waveform", ruby.class_object())?;
     waveform.define_method("sample_rate", method!(RubyWaveform::sample_rate, 0))?;

@@ -1,13 +1,13 @@
-# Audio peak generation contract, revision 1
+# Audio peak generation contract, revision 2
 
-Status: specified for the replacement; not implemented by this kit. Normative
-requirements below apply to the new library. No BBC command-line, file-format,
+Updated after 0.3.0 for decoder gapless trimming and raw PCM streaming. Normative
+requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
 ## 1. Scope and terminology
 
-The library reads a seekable local audio file and returns waveform peaks in
-memory. A frame is one time instant containing one sample from each source
+The library reads a seekable local audio file or an explicitly described raw
+PCM stream and returns waveform peaks in memory. A frame is one time instant containing one sample from each source
 channel. A point is a minimum/maximum pair for each output channel. Resolution
 arguments count **frames**, despite the historical `samples_per_pixel` name.
 
@@ -28,11 +28,12 @@ This is an acceptance target, not a claim of completed decoder coverage.
 Codec availability is distinct from container recognition. Multichannel AAC,
 HE-AAC, Opus, and Wave64 are not required for the first replacement.
 
-Do not add application-level encoder delay/padding trimming in this revision;
-configure optional decoder gapless trimming off where available. `N` counts
-frames actually delivered by that configuration. Duration is the decoded
-timeline, which can differ from a player's trimmed timeline. A future trimming
-policy needs separate requirements and fixtures.
+Enable decoder-provided gapless trimming. `N` counts frames actually delivered
+by the decoder after trimming; count and aggregation passes use identical
+settings. Do not manually subtract delay a second time. MP3 delay/padding and
+Vorbis priming must not create extra leading buckets. Available trimming depends
+on the codec/container metadata exposed by Symphonia; AAC/MP4 edit-list handling
+remains a documented limitation. Raw PCM receives no automatic trimming.
 
 ## 2. Ruby generation API
 
@@ -68,6 +69,30 @@ that open seekable file if needed. A second pass must agree on frame count,
 sample rate, and channel count; otherwise return an error. This does not promise
 to detect content edits that preserve those properties. Pipes, URLs, arbitrary
 Ruby IOs, and live input are outside this API.
+
+### Raw PCM input
+
+`generate_pcm(input, format:, sample_rate:, channels:, samples_per_pixel: 256,
+split_channels: false, amplitude_scale: nil)` accepts Ruby IOs or objects
+implementing `read(length, outbuf) -> String?`. Read at most 32,768 bytes per
+call into a reused output buffer, starting at the current position. Do not seek,
+close the input, create temporary media, or read the whole stream. Standard
+Ruby IO reads retain Ruby interrupt behavior. Nil/empty reads mean EOF; input
+exceptions propagate unchanged. Callers are responsible for producer exit status.
+
+`format` is a String or Symbol naming `u8`, `s8`, `s16le`, `s16be`, `s24le`,
+`s24be`, `s32le`, `s32be`, `f32le`, `f32be`, `f64le`, or `f64be`. PCM is
+headerless and interleaved. Sample rate is an Integer in `1..4_294_967_295`;
+source channel count is an Integer in `1..65_535`. Validate options before
+reading. Gain/mixing/quantization semantics below also apply to raw PCM.
+
+The Ruby stream API accepts only `samples_per_pixel` resolution. Exact `points`
+and `pixels_per_second` are unknown keywords. One pass produces `ceil(N/S)`
+points, with actual consumed frames determining duration. Handle arbitrary
+short reads, including split samples/frames. Reject incomplete samples/channel
+frames at EOF; never silently discard trailing bytes. Release accumulated native
+storage on read failure, Ruby interruption, or non-local unwind. Retain only
+fixed scratch buffers, partial sample/frame state, and output peaks.
 
 ## 3. Point boundaries
 

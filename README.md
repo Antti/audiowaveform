@@ -39,6 +39,28 @@ second. `ChannelMode` supports an arithmetic mono mix and separate channels.
 Every result retains the actual decoded frame count for duration, including
 the final partial bucket in fixed-resolution mode.
 
+## Raw PCM streams
+
+`generate_pcm(reader, format, sample_rate, channels, options)` accepts any Rust
+`Read`, including pipes, without seeking. For caller-managed reads,
+`PcmStream::new(...)`, `push(bytes)`, and `finish()` provide the same accumulator.
+PCM streaming is available even with `--no-default-features`.
+
+`PcmFormat` supports `u8`, `s8`, signed 16/24/32-bit integers and 32/64-bit
+floats, with explicit little/big endian variants (`s16le`, `f32be`, etc.).
+Samples must be interleaved. Rate and source channel count are required; channel
+count fits `u16`. Stream resolution is frames per point or points per second;
+exact `Points` is rejected before reading. Mono/split channels and both gain
+modes are supported. A final partial bucket is included; incomplete samples or
+channel frames at EOF are errors. Nonfinite float samples are errors.
+
+Working buffers are reused and bounded by channel count, independently of input
+length. Retained output still grows with the number of buckets. Cancellation
+variants check between reads and processing batches; a Rust `Read` implementation
+must itself arrange interruptible blocking I/O. Ruby IO reads remain interruptible
+by Ruby and never run inside an unprotected native callback. See the
+[Ruby streaming example](bindings/ruby/README.md#raw-pcm-streams).
+
 ## Memory and cancellation
 
 Fixed resolution decodes once. Exact point counts count decoded frames and
@@ -72,8 +94,10 @@ audio formats/codecs. Symphonia is the only direct runtime dependency.
 
 AAC-LC decoding targets mono/stereo. Multichannel AAC, HE-AAC, Opus, and Wave64
 are outside this revision. Codec availability is separate from container
-recognition. Decoder gapless trimming is disabled: duration describes decoded
-frames and may include encoder delay/padding.
+recognition. Decoder gapless trimming is enabled, removing delay/padding where
+Symphonia supplies it (including MP3 and Vorbis priming). Duration counts the
+frames actually delivered after trimming. AAC/MP4 edit-list trimming is still
+limited by the decoder, so AAC duration can differ from playback.
 
 Track selection uses explicit default-audio flags exposed by Symphonia, then
 the first reported audio track. Unsupported selected audio is an error.

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Enable decoder gapless trimming to remove the leading-delay regression in
+  0.3.0 for MP3 and Vorbis/WebM. MP3 padding is also trimmed when reported.
+- Add `generate_pcm(io, format:, sample_rate:, channels:, samples_per_pixel:)`
+  for one-pass PCM streams, including FFmpeg pipes and StringIO. Reuse bounded
+  working buffers, keep mono/split and gain support, and reject incomplete frames.
+- Add Rust `PcmStream`, `generate_pcm`, and cancellation variants without seek
+  requirements or codec features.
+
 ## 0.3.0 (2026-09-21)
 
 - Use the replacement streaming core and newly generated test media.

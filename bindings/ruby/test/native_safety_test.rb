@@ -228,6 +228,8 @@ class NativeSafetyTest < Minitest::Test
       require "rbs/test/setup"
       require "audiowaveform"
       require "pathname"
+      require "stringio"
+      AudioWaveform.generate_pcm(StringIO.new([1, 2].pack("s<*")), format: :s16le, sample_rate: 8000, channels: 1)
       [ARGV.fetch(0), Pathname(ARGV.fetch(0))].each do |input|
         waveform = AudioWaveform.generate(input, points: 3, amplitude_scale: "auto")
         waveform.data(bits: 8)

@@ -13,6 +13,20 @@ module AudioWaveform
     ?amplitude_scale: (Numeric | :auto | "auto")?
   ) -> Waveform
 
+  interface _PCMInput
+    def read: (Integer length, String outbuf) -> String?
+  end
+
+  def self.generate_pcm: (
+    _PCMInput input,
+    format: (String | Symbol),
+    sample_rate: Integer,
+    channels: Integer,
+    ?samples_per_pixel: Integer,
+    ?split_channels: bool,
+    ?amplitude_scale: (Numeric | :auto | "auto")?
+  ) -> Waveform
+
   class Waveform
     def sample_rate: () -> Integer
     def samples_per_pixel: () -> Integer

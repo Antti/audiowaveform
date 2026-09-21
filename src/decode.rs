@@ -151,7 +151,7 @@ impl Session {
             .ok_or(Error::InvalidAudio("missing audio codec parameters"))?;
         let decoder = symphonia::default::get_codecs().make_audio_decoder(
             params,
-            &AudioDecoderOptions::default().gapless(false).verify(true),
+            &AudioDecoderOptions::default().gapless(true).verify(true),
         )?;
         let track = track.id;
         Ok(Self {

@@ -3,6 +3,19 @@
 require_relative "test_helper"
 
 class CodecsTest < Minitest::Test
+  def test_gapless_audio_has_no_leading_priming_buckets
+    directory = File.expand_path("../../../tests/fixtures/codecs", __dir__)
+    %w[audio.mp3 vorbis.ogg live.webm].each do |file|
+      [{points: 110}, {samples_per_pixel: 256}].each do |options|
+        w = AudioWaveform.generate(File.join(directory, file), **options)
+        file == "audio.mp3" ? assert_equal(0.25, w.duration) : assert_includes(12000..12288, (w.duration * 48000).round)
+        min, max = w.point(0)
+        assert_operator min, :<, -8000
+        assert_operator max, :>, 8000
+      end
+    end
+  end
+
   def test_generated_codec_matrix
     directory = File.expand_path("../../../tests/fixtures/codecs", __dir__)
     manifest = JSON.parse(File.read(File.join(directory, "manifest.json")))

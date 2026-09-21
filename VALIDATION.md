@@ -130,3 +130,38 @@ Final Rust crate naming and crates.io publishing remain future work.
 The legacy repository is preserved at
 [Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy);
 the active repository has independent history.
+
+## PCM streaming and gapless follow-up (unreleased)
+
+Local Rust all-feature and no-default-feature tests, formatting checks, and
+strict Clippy for both workspaces pass. New coverage verifies all 12 PCM
+encodings with split samples/frames, short/interrupted reads, final partial
+buckets, empty input, mixing/gain precision, invalid metadata, truncated input,
+nonfinite values, cancellation, and panic containment. A fixed-resolution
+stream performs one pass and accepts readers with no seek implementation.
+
+The PCM allocation test records zero allocations across 100 pushes after
+initialization when no new output bucket is needed. Increasing input from
+110,000 to 11,000,000 frames while keeping 110 output points produces identical
+scratch/output capacities, with either fixed gain or normalization.
+
+Ruby 4.0.5 passes 71 tests / 1,391 assertions and RBS validation, including IO
+pipes, StringIO/current position, reused read buffers, errors and `throw`
+payloads, timeout/thread cancellation while blocked on a pipe, and native
+storage cleanup before GC. An isolated source-gem installation exercises the
+new PCM API and MP3 trimming in addition to the numeric/codec checks. Package
+activation explicitly selects the installed artifact even when a globally
+installed native gem shares its version.
+
+A manual end-to-end check generated a three-second, six-channel AAC/M4A,
+decoded/downmixed it with FFmpeg into a mono s16le pipe, and consumed that pipe
+through the Ruby API. It produced 144,000 frames, 110 points at 1,310 frames per
+bucket, and 220 signed 8-bit values. All 16-bit peaks matched independent batch
+min/max arithmetic over FFmpeg's PCM output; the production path used no WAV or
+whole-recording buffer.
+
+Gapless regression tests require the 12,000-frame synthetic MP3 to recover its
+source length and a non-silent first bucket. Vorbis/Ogg and Vorbis/WebM likewise
+reject the leading priming buckets seen in 0.3.0, allowing their documented
+container-tail granularity. AAC/MP4 edit-list trimming remains a decoder
+limitation; this does not promise bit-identical legacy peaks.

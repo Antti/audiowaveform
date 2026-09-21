@@ -145,3 +145,44 @@ fn live_webm_truncated_packet_is_not_treated_as_ordinary_eof() {
         );
     }
 }
+
+#[test]
+fn gapless_decoding_removes_leading_delay_before_placing_buckets() {
+    // The fixture source contains 12,000 frames, starting immediately with a
+    // tone. MP3 carries exact delay/padding metadata. Vorbis container tail
+    // granularity can retain up to one 256-frame block; it must not retain the
+    // extra priming blocks that shifted the waveform in 0.3.0.
+    for (feature, file) in [
+        ("mp3", "audio.mp3"),
+        ("ogg", "vorbis.ogg"),
+        ("mkv", "live.webm"),
+    ] {
+        if !enabled(feature) {
+            continue;
+        }
+        for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(256)] {
+            let waveform = generate(
+                fixture(file),
+                Options {
+                    resolution,
+                    ..Options::default()
+                },
+            )
+            .unwrap();
+            if feature == "mp3" {
+                assert_eq!(waveform.source_frames(), 12000, "{file}");
+            } else {
+                assert!(
+                    (12000..=12288).contains(&waveform.source_frames()),
+                    "{file}: {}",
+                    waveform.source_frames()
+                );
+            }
+            let [min, max] = waveform.point(0, 0).unwrap();
+            assert!(
+                min < -8000 && max > 8000,
+                "{file}: first bucket contains priming silence: {min}/{max}"
+            );
+        }
+    }
+}

@@ -85,6 +85,14 @@ impl Reducer {
         Ok(reducer)
     }
 
+    pub(crate) fn allocated_bytes(&self) -> usize {
+        self.current.capacity() * size_of::<f64>()
+            + match &self.peaks {
+                Peaks::Integer(data) => data.capacity() * size_of::<i16>(),
+                Peaks::Unscaled(data) => data.capacity() * size_of::<f64>(),
+            }
+    }
+
     fn window(&self) -> (u128, u128) {
         let index = u128::from(self.points);
         match self.options.resolution {
