@@ -1,0 +1,1593 @@
+{
+  "revision": 1,
+  "fixtures": {
+    "empty": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": []
+    },
+    "empty_stereo": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 2,
+      "frames": []
+    },
+    "silence": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    "uneven": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          400
+        ],
+        [
+          -200
+        ],
+        [
+          900
+        ],
+        [
+          -1000
+        ],
+        [
+          300
+        ],
+        [
+          700
+        ],
+        [
+          -600
+        ]
+      ]
+    },
+    "short": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          256
+        ],
+        [
+          -512
+        ]
+      ]
+    },
+    "one_min": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          -32768
+        ]
+      ]
+    },
+    "stereo": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 2,
+      "frames": [
+        [
+          1000,
+          3000
+        ],
+        [
+          -1000,
+          1000
+        ],
+        [
+          3000,
+          -1000
+        ],
+        [
+          -3000,
+          -1000
+        ]
+      ]
+    },
+    "positive": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          1000
+        ],
+        [
+          2000
+        ],
+        [
+          3000
+        ],
+        [
+          4000
+        ]
+      ]
+    },
+    "negative": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          -1000
+        ],
+        [
+          -2000
+        ],
+        [
+          -3000
+        ],
+        [
+          -4000
+        ]
+      ]
+    },
+    "cancellation": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 2,
+      "frames": [
+        [
+          32767,
+          -32767
+        ],
+        [
+          -32768,
+          32767
+        ]
+      ]
+    },
+    "gain": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          1000
+        ],
+        [
+          -2000
+        ],
+        [
+          30000
+        ],
+        [
+          -32768
+        ]
+      ]
+    },
+    "automatic": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          1000
+        ],
+        [
+          -2000
+        ],
+        [
+          1000
+        ],
+        [
+          0
+        ]
+      ]
+    },
+    "boundaries": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          -32768
+        ],
+        [
+          -32767
+        ],
+        [
+          -257
+        ],
+        [
+          -256
+        ],
+        [
+          -255
+        ],
+        [
+          -1
+        ],
+        [
+          0
+        ],
+        [
+          1
+        ],
+        [
+          255
+        ],
+        [
+          256
+        ],
+        [
+          257
+        ],
+        [
+          32767
+        ]
+      ]
+    },
+    "unsigned8": {
+      "encoding": "pcm_u8",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          0
+        ],
+        [
+          127
+        ],
+        [
+          128
+        ],
+        [
+          129
+        ],
+        [
+          255
+        ]
+      ]
+    },
+    "signed24": {
+      "encoding": "pcm_s24le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          -8388608
+        ],
+        [
+          -65537
+        ],
+        [
+          -65536
+        ],
+        [
+          -1
+        ],
+        [
+          0
+        ],
+        [
+          65535
+        ],
+        [
+          65536
+        ],
+        [
+          8388607
+        ]
+      ]
+    },
+    "signed32": {
+      "encoding": "pcm_s32le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          -2147483648
+        ],
+        [
+          -16777217
+        ],
+        [
+          -16777216
+        ],
+        [
+          -1
+        ],
+        [
+          0
+        ],
+        [
+          16777215
+        ],
+        [
+          16777216
+        ],
+        [
+          2147483647
+        ]
+      ]
+    },
+    "float32": {
+      "encoding": "float32le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          "-2"
+        ],
+        [
+          "-1"
+        ],
+        [
+          "-0.5"
+        ],
+        [
+          "-0.000030517578125"
+        ],
+        [
+          "0"
+        ],
+        [
+          "0.000030517578125"
+        ],
+        [
+          "0.5"
+        ],
+        [
+          "1"
+        ],
+        [
+          "2"
+        ]
+      ]
+    },
+    "quiet_float": {
+      "encoding": "float32le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          "0.0000152587890625"
+        ],
+        [
+          "-0.0000152587890625"
+        ]
+      ]
+    },
+    "surround": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 6,
+      "frames": [
+        [
+          600,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          -1200,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1800,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          -2400
+        ]
+      ]
+    },
+    "impulses": {
+      "encoding": "pcm_s16le",
+      "rate": 8000,
+      "channels": 1,
+      "frames": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          32767
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          -32768
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "empty_exact",
+      "fixture": "empty",
+      "options": {
+        "points": 110
+      },
+      "expected": {
+        "frames": 0,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 0,
+        "samples_per_pixel": 2,
+        "data16": [],
+        "data8": []
+      }
+    },
+    {
+      "id": "empty_default",
+      "fixture": "empty",
+      "options": {},
+      "expected": {
+        "frames": 0,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 0,
+        "samples_per_pixel": 256,
+        "data16": [],
+        "data8": []
+      }
+    },
+    {
+      "id": "empty_split",
+      "fixture": "empty_stereo",
+      "options": {
+        "points": 3,
+        "split_channels": true
+      },
+      "expected": {
+        "frames": 0,
+        "sample_rate": 8000,
+        "channels": 2,
+        "length": 0,
+        "samples_per_pixel": 2,
+        "data16": [],
+        "data8": []
+      }
+    },
+    {
+      "id": "silence_exact",
+      "fixture": "silence",
+      "options": {
+        "points": 4
+      },
+      "expected": {
+        "frames": 8,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 4,
+        "samples_per_pixel": 2,
+        "data16": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "data8": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "silence_auto",
+      "fixture": "silence",
+      "options": {
+        "points": 4,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 8,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 4,
+        "samples_per_pixel": 2,
+        "data16": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "data8": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "silence_large_gain",
+      "fixture": "silence",
+      "options": {
+        "points": 4,
+        "amplitude_scale": 1e+308
+      },
+      "expected": {
+        "frames": 8,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 4,
+        "samples_per_pixel": 2,
+        "data16": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "data8": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "uneven_exact",
+      "fixture": "uneven",
+      "options": {
+        "points": 3
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 3,
+        "samples_per_pixel": 2,
+        "data16": [
+          -200,
+          400,
+          -1000,
+          900,
+          -600,
+          700
+        ],
+        "data8": [
+          0,
+          1,
+          -3,
+          3,
+          -2,
+          2
+        ]
+      }
+    },
+    {
+      "id": "uneven_one_point",
+      "fixture": "uneven",
+      "options": {
+        "points": 1
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 7,
+        "data16": [
+          -1000,
+          900
+        ],
+        "data8": [
+          -3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "uneven_fixed_tail",
+      "fixture": "uneven",
+      "options": {
+        "samples_per_pixel": 3
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 3,
+        "samples_per_pixel": 3,
+        "data16": [
+          -200,
+          900,
+          -1000,
+          700,
+          -600,
+          -600
+        ],
+        "data8": [
+          0,
+          3,
+          -3,
+          2,
+          -2,
+          -2
+        ]
+      }
+    },
+    {
+      "id": "uneven_default",
+      "fixture": "uneven",
+      "options": {},
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 256,
+        "data16": [
+          -1000,
+          900
+        ],
+        "data8": [
+          -3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "uneven_nil_defaults",
+      "fixture": "uneven",
+      "options": {
+        "points": null,
+        "pixels_per_second": null,
+        "samples_per_pixel": null
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 256,
+        "data16": [
+          -1000,
+          900
+        ],
+        "data8": [
+          -3,
+          3
+        ]
+      }
+    },
+    {
+      "id": "time_resolution",
+      "fixture": "uneven",
+      "options": {
+        "pixels_per_second": 2500
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 3,
+        "samples_per_pixel": 3,
+        "data16": [
+          -200,
+          900,
+          -1000,
+          700,
+          -600,
+          -600
+        ],
+        "data8": [
+          0,
+          3,
+          -3,
+          2,
+          -2,
+          -2
+        ]
+      }
+    },
+    {
+      "id": "time_resolution_minimum",
+      "fixture": "uneven",
+      "options": {
+        "pixels_per_second": 9000
+      },
+      "expected": {
+        "frames": 7,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 4,
+        "samples_per_pixel": 2,
+        "data16": [
+          -200,
+          400,
+          -1000,
+          900,
+          300,
+          700,
+          -600,
+          -600
+        ],
+        "data8": [
+          0,
+          1,
+          -3,
+          3,
+          1,
+          2,
+          -2,
+          -2
+        ]
+      }
+    },
+    {
+      "id": "short_repetition",
+      "fixture": "short",
+      "options": {
+        "points": 5
+      },
+      "expected": {
+        "frames": 2,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 5,
+        "samples_per_pixel": 2,
+        "data16": [
+          256,
+          256,
+          256,
+          256,
+          256,
+          256,
+          -512,
+          -512,
+          -512,
+          -512
+        ],
+        "data8": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          -2,
+          -2,
+          -2,
+          -2
+        ]
+      }
+    },
+    {
+      "id": "one_frame_repetition",
+      "fixture": "one_min",
+      "options": {
+        "points": 3
+      },
+      "expected": {
+        "frames": 1,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 3,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -32768,
+          -32768,
+          -32768,
+          -32768
+        ],
+        "data8": [
+          -128,
+          -128,
+          -128,
+          -128,
+          -128,
+          -128
+        ]
+      }
+    },
+    {
+      "id": "positive_no_zero_padding",
+      "fixture": "positive",
+      "options": {
+        "points": 2
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          1000,
+          2000,
+          3000,
+          4000
+        ],
+        "data8": [
+          3,
+          7,
+          11,
+          15
+        ]
+      }
+    },
+    {
+      "id": "negative_no_zero_padding",
+      "fixture": "negative",
+      "options": {
+        "points": 2
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -2000,
+          -1000,
+          -4000,
+          -3000
+        ],
+        "data8": [
+          -7,
+          -3,
+          -15,
+          -11
+        ]
+      }
+    },
+    {
+      "id": "stereo_mix",
+      "fixture": "stereo",
+      "options": {
+        "points": 2
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          0,
+          2000,
+          -2000,
+          1000
+        ],
+        "data8": [
+          0,
+          7,
+          -7,
+          3
+        ]
+      }
+    },
+    {
+      "id": "stereo_split_layout",
+      "fixture": "stereo",
+      "options": {
+        "points": 2,
+        "split_channels": true
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 2,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -1000,
+          1000,
+          1000,
+          3000,
+          -3000,
+          3000,
+          -1000,
+          -1000
+        ],
+        "data8": [
+          -3,
+          3,
+          3,
+          11,
+          -11,
+          11,
+          -3,
+          -3
+        ]
+      }
+    },
+    {
+      "id": "stereo_auto_shared_gain",
+      "fixture": "stereo",
+      "options": {
+        "points": 2,
+        "split_channels": true,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 2,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -10922,
+          10922,
+          10922,
+          32767,
+          -32767,
+          32767,
+          -10922,
+          -10922
+        ],
+        "data8": [
+          -42,
+          42,
+          42,
+          127,
+          -127,
+          127,
+          -42,
+          -42
+        ]
+      }
+    },
+    {
+      "id": "mix_before_quantization",
+      "fixture": "cancellation",
+      "options": {
+        "points": 1,
+        "amplitude_scale": 2
+      },
+      "expected": {
+        "frames": 2,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 2,
+        "data16": [
+          -1,
+          0
+        ],
+        "data8": [
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "auto_after_mix",
+      "fixture": "cancellation",
+      "options": {
+        "points": 1,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 2,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32767,
+          0
+        ],
+        "data8": [
+          -127,
+          0
+        ]
+      }
+    },
+    {
+      "id": "gain_saturation",
+      "fixture": "gain",
+      "options": {
+        "points": 2,
+        "amplitude_scale": 1.5
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -3000,
+          1500,
+          -32768,
+          32767
+        ],
+        "data8": [
+          -11,
+          5,
+          -128,
+          127
+        ]
+      }
+    },
+    {
+      "id": "gain_zero",
+      "fixture": "gain",
+      "options": {
+        "points": 2,
+        "amplitude_scale": 0
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "data8": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": "large_finite_gain",
+      "fixture": "gain",
+      "options": {
+        "points": 2,
+        "amplitude_scale": 1e+308
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          32767,
+          -32768,
+          32767
+        ],
+        "data8": [
+          -128,
+          127,
+          -128,
+          127
+        ]
+      }
+    },
+    {
+      "id": "auto_global",
+      "fixture": "automatic",
+      "options": {
+        "points": 2,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32767,
+          16383,
+          0,
+          16383
+        ],
+        "data8": [
+          -127,
+          63,
+          0,
+          63
+        ]
+      }
+    },
+    {
+      "id": "auto_fixed",
+      "fixture": "automatic",
+      "options": {
+        "samples_per_pixel": 2,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32767,
+          16383,
+          0,
+          16383
+        ],
+        "data8": [
+          -127,
+          63,
+          0,
+          63
+        ]
+      }
+    },
+    {
+      "id": "signed_8bit_truncation",
+      "fixture": "boundaries",
+      "options": {
+        "points": 12
+      },
+      "expected": {
+        "frames": 12,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 12,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -32767,
+          -32767,
+          -257,
+          -257,
+          -256,
+          -256,
+          -255,
+          -255,
+          -1,
+          -1,
+          0,
+          0,
+          1,
+          1,
+          255,
+          255,
+          256,
+          256,
+          257,
+          257,
+          32767,
+          32767
+        ],
+        "data8": [
+          -128,
+          -128,
+          -127,
+          -127,
+          -1,
+          -1,
+          -1,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "unsigned_8bit_input",
+      "fixture": "unsigned8",
+      "options": {
+        "points": 5
+      },
+      "expected": {
+        "frames": 5,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 5,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -256,
+          -256,
+          0,
+          0,
+          256,
+          256,
+          32512,
+          32512
+        ],
+        "data8": [
+          -128,
+          -128,
+          -1,
+          -1,
+          0,
+          0,
+          1,
+          1,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "signed_24bit_input",
+      "fixture": "signed24",
+      "options": {
+        "points": 8
+      },
+      "expected": {
+        "frames": 8,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 8,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -256,
+          -256,
+          -256,
+          -256,
+          0,
+          0,
+          0,
+          0,
+          255,
+          255,
+          256,
+          256,
+          32767,
+          32767
+        ],
+        "data8": [
+          -128,
+          -128,
+          -1,
+          -1,
+          -1,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "signed_32bit_input",
+      "fixture": "signed32",
+      "options": {
+        "points": 8
+      },
+      "expected": {
+        "frames": 8,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 8,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -256,
+          -256,
+          -256,
+          -256,
+          0,
+          0,
+          0,
+          0,
+          255,
+          255,
+          256,
+          256,
+          32767,
+          32767
+        ],
+        "data8": [
+          -128,
+          -128,
+          -1,
+          -1,
+          -1,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "float_input",
+      "fixture": "float32",
+      "options": {
+        "points": 9
+      },
+      "expected": {
+        "frames": 9,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 9,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -32768,
+          -32768,
+          -16384,
+          -16384,
+          -1,
+          -1,
+          0,
+          0,
+          1,
+          1,
+          16384,
+          16384,
+          32767,
+          32767,
+          32767,
+          32767
+        ],
+        "data8": [
+          -128,
+          -128,
+          -128,
+          -128,
+          -64,
+          -64,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          64,
+          64,
+          127,
+          127,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "float_gain_before_clipping",
+      "fixture": "float32",
+      "options": {
+        "points": 9,
+        "amplitude_scale": 0.5
+      },
+      "expected": {
+        "frames": 9,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 9,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32768,
+          -32768,
+          -16384,
+          -16384,
+          -8192,
+          -8192,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8192,
+          8192,
+          16384,
+          16384,
+          32767,
+          32767
+        ],
+        "data8": [
+          -128,
+          -128,
+          -64,
+          -64,
+          -32,
+          -32,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          32,
+          32,
+          64,
+          64,
+          127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "auto_before_quantization",
+      "fixture": "quiet_float",
+      "options": {
+        "points": 1,
+        "amplitude_scale": "auto"
+      },
+      "expected": {
+        "frames": 2,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 1,
+        "samples_per_pixel": 2,
+        "data16": [
+          -32767,
+          32767
+        ],
+        "data8": [
+          -127,
+          127
+        ]
+      }
+    },
+    {
+      "id": "surround_all_channels_mixed",
+      "fixture": "surround",
+      "options": {
+        "points": 2
+      },
+      "expected": {
+        "frames": 4,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 2,
+        "samples_per_pixel": 2,
+        "data16": [
+          -200,
+          100,
+          -400,
+          300
+        ],
+        "data8": [
+          0,
+          0,
+          -1,
+          1
+        ]
+      }
+    },
+    {
+      "id": "impulse_bucket_edges",
+      "fixture": "impulses",
+      "options": {
+        "points": 3
+      },
+      "expected": {
+        "frames": 9,
+        "sample_rate": 8000,
+        "channels": 1,
+        "length": 3,
+        "samples_per_pixel": 3,
+        "data16": [
+          0,
+          32767,
+          -32768,
+          0,
+          0,
+          0
+        ],
+        "data8": [
+          0,
+          127,
+          -128,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

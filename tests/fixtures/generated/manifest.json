@@ -1,0 +1,29 @@
+{
+  "revision": 1,
+  "vectors_sha256": "d1d4f20c292b648be27f84eda436fefea6c18e42276546701a1d66fce66f0688",
+  "files": {
+    "automatic.wav": "638519f9186bbcfa2815350e1e6da06eedc67971b0650c63f2098728bac7b3dd",
+    "boundaries.wav": "9d831b105775695c827b09b4ffc9a4716a990f875e5980b3f3fa83cc47b01d91",
+    "cancellation.wav": "2380ed0aa712c9f38ba451d9c312e66e3153bc00ad5d77a4511bed13bdaac8ae",
+    "empty.wav": "4f8734c5e13ac599e168cf247a51c1dd0758537ce00bf16d7fed1a3d14d07041",
+    "empty_stereo.wav": "ab502e0759361ed10546c1d7f4cdd606f89f51d2c9a4d5e093c9cc7d6ceb0684",
+    "float32.wav": "c304e7dcad9eee570af47ea514d3e9370b89f32da8771539645f68de295e71c4",
+    "gain.wav": "527819713b9c52aaad9c2c010c60e011667f48a4fb7f61de85e9b65cb522883e",
+    "impulses.wav": "ad123ddfd73411e5683149af2e35d0bd94069f7137ddfb75fad5910e4451b68c",
+    "invalid_header.wav": "8c34de22bcf63cbb1aef4dfd24d91a9bd222ab79020810092194db627c4695e7",
+    "negative.wav": "1e668e59675768a19bfe9030133ab23ca9c0780f1a796d416c19dddc36418f90",
+    "nonfinite_inf.wav": "c9c5ea047da6a999d754101bdf7da9be9cf5830fc86080e67b4785ac0b5d7676",
+    "nonfinite_nan.wav": "e2f9a3bd351a74baa57b495f8e78e2932a882d4fe6d7bd7fcd675d270714c3d5",
+    "one_min.wav": "37302c033f291622155630cd63bcd6794d71af79e7f4a2b73ff953fa4c722da2",
+    "positive.wav": "d3dc17b3b3c9c7959434e8b7781c24194eb84c4ddaf5e3e1f0e88392559a70f9",
+    "quiet_float.wav": "8fe3ec5e30df0e6a61f7df50ab20ec9b7cd8f5db2820ac67a679cb511afb66dd",
+    "short.wav": "33cd2d6bd5c24b6499a0c86cca50eb74a346e2a0e80fb86a711d7d4057afced1",
+    "signed24.wav": "62c25b01ad1416c20a567c57a20a26b39f80fdaa3b0a6bf1808b1c8ca9ecb026",
+    "signed32.wav": "85f5966faf89b0a656791d26cf5c3bce0ce595469d3624c57488ccc92a1d49cc",
+    "silence.wav": "86b5f5a4a69b226cef532cb4019df8ff0c08a804fa919af5d116e6e257cd9eac",
+    "stereo.wav": "ccf03b1a54772c49c07fe8c636a87afbc0456187363c69bd9fa67391f4d32356",
+    "surround.wav": "9d2374b6fe1ac15da54e1f32b5ef40921edf6594fc26eb8d806251ccc75bd58c",
+    "uneven.wav": "c202c10dec3ba9c2a89215cbc7e0b207d41064fc132c9521d40781f8b03da176",
+    "unsigned8.wav": "2ffd0956b1c0fff31df580245d449ac94ad5c2df73c350b7e9017970586b303c"
+  }
+}

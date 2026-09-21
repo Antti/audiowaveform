@@ -1,0 +1,30 @@
+[package]
+name = "waveform-core"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Streaming audio min/max peaks with exact point counts"
+
+[workspace]
+
+[features]
+default = ["wav"]
+wav = ["symphonia/wav", "symphonia/pcm", "symphonia/adpcm"]
+aiff = ["symphonia/aiff", "symphonia/pcm"]
+caf = ["symphonia/caf", "symphonia/pcm", "symphonia/alac"]
+flac = ["symphonia/flac"]
+ogg = ["symphonia/ogg", "symphonia/vorbis", "symphonia/flac"]
+aac = ["symphonia/aac"]
+m4a = ["symphonia/isomp4", "symphonia/aac", "symphonia/alac"]
+mkv = ["symphonia/mkv", "symphonia/vorbis", "symphonia/flac", "symphonia/pcm", "symphonia/aac", "symphonia/mp3"]
+mp1 = ["symphonia/mp1", "symphonia/id3v2"]
+mp2 = ["symphonia/mp2", "symphonia/id3v2"]
+mp3 = ["symphonia/mp3", "symphonia/id3v2"]
+all-formats = ["wav", "aiff", "caf", "flac", "ogg", "aac", "m4a", "mkv", "mp1", "mp2", "mp3"]
+
+[dependencies]
+symphonia = { version = "0.6.1", default-features = false }
+
+[dev-dependencies]
+serde_json = "1.0"
+tempfile = "3"
