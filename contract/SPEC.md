@@ -1,6 +1,6 @@
 # Audio peak generation contract, revision 2
 
-Updated after 0.3.0 for gapless trimming, raw PCM, and exact-count metadata. Normative
+Updated for Ruby 0.4.0 with gapless trimming, raw PCM, and exact-count metadata. Normative
 requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
