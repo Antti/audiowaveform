@@ -131,7 +131,7 @@ The legacy repository is preserved at
 [Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy);
 the active repository has independent history.
 
-## PCM streaming and gapless follow-up (unreleased)
+## PCM streaming and gapless follow-up (Ruby 0.4.0)
 
 Local Rust all-feature and no-default-feature tests, formatting checks, and
 strict Clippy for both workspaces pass. New coverage verifies all 12 PCM
@@ -166,7 +166,7 @@ reject the leading priming buckets seen in 0.3.0, allowing their documented
 container-tail granularity. AAC/MP4 edit-list trimming remains a decoder
 limitation; this does not promise bit-identical legacy peaks.
 
-## Exact-point metadata fast path (unreleased)
+## Exact-point metadata fast path (Ruby 0.4.0)
 
 PCM/float WAV contract vectors and native FLAC now report one decoding pass
 for exact `points`, with unchanged literal peaks. AAC/M4A, MP3, ADPCM, Ogg,
@@ -194,3 +194,8 @@ including peak, pass-count, and allocation checks. Formatting and strict Clippy
 pass in both workspaces. Ruby passes 71 tests / 1,391 assertions and RBS checks;
 an isolated source-gem installation verifies that the new module is packaged
 and builds correctly.
+
+The Ruby 0.4.0 version bump passes 72 Ruby tests / 1,393 assertions and RBS
+validation. The built `audiowaveform-0.4.0.gem` installs into an isolated gem
+directory and passes the contract vectors, codec matrix, PCM streaming, and
+MP3 gapless checks. Both unpublished Rust packages remain at 0.1.0.
