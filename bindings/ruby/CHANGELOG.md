@@ -6,6 +6,7 @@
 - Keep exact `points:`, mono/split channels, normalization, metadata and point lookup.
 - Return signed 8-/16-bit peak arrays directly, without a temporary Rust peak vector.
 - Cancel native generation on Ruby interrupts and retain native GC accounting.
+- Continue decoding after harmless thread wakeups and returning signal handlers.
 - Remove `save`, `to_dat`, `to_json`, and `to_txt`.
 - Calculate duration from decoded frames in every resolution mode.
 - Use power-of-two PCM scaling; numeric peaks can differ from 0.2.x.

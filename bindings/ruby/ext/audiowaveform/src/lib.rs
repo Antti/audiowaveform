@@ -1,6 +1,7 @@
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::{
-    ffi::{c_long, c_void},
+    cell::Cell,
+    ffi::{c_int, c_long, c_void},
     ptr,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -46,14 +47,64 @@ where
     ptr::null_mut()
 }
 
-// Ruby may invoke this from another thread while decoding is running.
-unsafe extern "C" fn cancel_generation(data: *mut c_void) {
+#[derive(Default)]
+struct Interrupts {
+    wakeup: AtomicBool,
+    // Only the decoding thread reads/writes the Ruby unwind tag.
+    state: Cell<c_int>,
+}
+
+impl Interrupts {
+    fn cancelled(&self) -> bool {
+        if self.state.get() != 0 {
+            return true;
+        }
+        if self.wakeup.load(Ordering::Relaxed) && self.wakeup.swap(false, Ordering::Relaxed) {
+            let mut state = 0;
+            // SAFETY: called synchronously inside the no-GVL callback on the
+            // same Ruby thread. `check_interrupts` catches Ruby unwinding and
+            // returns no Ruby object; `state` stays alive until it returns.
+            unsafe {
+                rb_sys::rb_thread_call_with_gvl(
+                    Some(check_interrupts),
+                    (&mut state as *mut c_int).cast(),
+                );
+            }
+            self.state.set(state);
+        }
+        self.state.get() != 0
+    }
+}
+
+unsafe extern "C" fn check_interrupts(data: *mut c_void) -> *mut c_void {
+    unsafe extern "C" fn check(_: rb_sys::VALUE) -> rb_sys::VALUE {
+        // SAFETY: the surrounding with-GVL callback holds the GVL. This
+        // function owns no Rust resources for Ruby's non-local jump to skip.
+        unsafe { rb_sys::rb_thread_check_ints() };
+        rb_sys::Qnil as rb_sys::VALUE
+    }
+
+    // Keep the exception/throw payload in Ruby's own GC-rooted error state.
+    // Unlike Magnus's `protect`, raw `rb_protect` does not extract and clear
+    // that state. Only its integer tag crosses back into no-GVL Rust code.
+    // SAFETY: `data` points to the caller's live integer, and `check` cannot
+    // panic. All Ruby non-local jumps are caught before returning without GVL.
+    unsafe {
+        rb_sys::rb_protect(Some(check), rb_sys::Qnil as rb_sys::VALUE, data.cast());
+    }
+    ptr::null_mut()
+}
+
+// Ruby may invoke this from another thread while decoding is running. An
+// unblock is only a request to check interrupts: Thread#wakeup and returning
+// signal handlers must not discard the decoder's buffers or progress.
+unsafe extern "C" fn wake_generation(data: *mut c_void) {
     // SAFETY: this atomic outlives the synchronous GVL call and its unblock
     // callbacks. Only atomic access occurs here; no Ruby APIs or allocation.
     unsafe { &*data.cast::<AtomicBool>() }.store(true, Ordering::Relaxed);
 }
 
-fn without_gvl<F, T>(ruby: &Ruby, cancelled: &AtomicBool, function: F) -> Result<T, Error>
+fn without_gvl<F, T>(ruby: &Ruby, interrupts: &Interrupts, function: F) -> Result<T, Error>
 where
     F: FnOnce() -> T,
 {
@@ -67,15 +118,22 @@ where
     // even when Ruby exits the protected call with a non-local jump.
     protect(|| {
         // SAFETY: the callback only accesses the live stack-allocated task,
-        // does not invoke Ruby methods, and catches Rust panics before they
-        // cross the C ABI boundary. rb-sys tracks its allocations for Ruby GC.
+        // invokes Ruby only via the protected with-GVL interrupt check, and
+        // catches Rust panics before they cross the C ABI boundary. rb-sys
+        // tracks its allocations for Ruby GC.
         unsafe {
             rb_sys::rb_thread_call_without_gvl(
                 Some(call_without_gvl::<F, T>),
                 (&mut task as *mut NoGvlTask<F, T>).cast(),
-                Some(cancel_generation),
-                (cancelled as *const AtomicBool).cast_mut().cast(),
+                Some(wake_generation),
+                (&interrupts.wakeup as *const AtomicBool).cast_mut().cast(),
             );
+            // Decoding has returned and dropped all its resources. Resume the
+            // captured interrupt here so the outer `protect` converts it to a
+            // Magnus error without jumping across the decoder's Rust owners.
+            if interrupts.state.get() != 0 {
+                rb_sys::rb_jump_tag(interrupts.state.get());
+            }
         }
         rb_sys::Qnil as rb_sys::VALUE
     })?;
@@ -194,9 +252,9 @@ fn generate(
         },
         gain,
     };
-    let cancelled = AtomicBool::new(false);
-    without_gvl(ruby, &cancelled, || {
-        generate_with_cancel(input, options, || cancelled.load(Ordering::Relaxed))
+    let interrupts = Interrupts::default();
+    without_gvl(ruby, &interrupts, || {
+        generate_with_cancel(input, options, || interrupts.cancelled())
     })?
     .map(RubyWaveform)
     .map_err(|error| core_error(ruby, error))

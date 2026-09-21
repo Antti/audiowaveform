@@ -76,9 +76,7 @@ passed for both Cargo workspaces; the core all-feature tests passed again.
 
 On macOS arm64:
 
-- Ruby 4.0.5 passed the final 54-test / 966-assertion suite. Ruby 3.4.7
-  passed the 53-test / 965-assertion integration suite before the additional
-  publishing-guard regression; release tests were also checked separately.
+- Ruby 4.0.5 and Ruby 3.4.7 each passed the final 58-test / 971-assertion suite.
 - All 36 exact numeric vectors pass through the Ruby API, including metadata,
   array independence, point ordering, argument errors and omitted export APIs.
 - The 17-format codec corpus passes in mono and split modes; lossless peaks
@@ -87,6 +85,12 @@ On macOS arm64:
   GC, and RBS runtime checks pass. Interrupted exact-count and fixed-resolution
   decoding of a sparse 500-million-frame WAV returns promptly and reclaims
   native allocations. Safety subprocesses have a 30-second watchdog.
+- Repeated `Thread#wakeup` and returning signal handlers preserve generation
+  in both resolution modes. On Unix, generation also completes after removing
+  the input pathname during decoding, checking that wakeups do not reopen it.
+  Signal exceptions and `throw` retain their original payloads across native
+  cleanup; `Thread#kill` returns promptly and runs Ruby `ensure` blocks.
+  Signal tests require Unix `USR1` and are skipped on Windows.
 - A local source gem was built, installed into an isolated gem directory, and
   exercised against all numeric vectors and codecs. Its build used only the
   packaged replacement sources and normal Cargo/Ruby build dependencies.

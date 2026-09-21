@@ -85,6 +85,121 @@ class NativeSafetyTest < Minitest::Test
     end
   end
 
+  def test_wakeup_preserves_generation_and_the_open_input
+    %w[points samples_per_pixel].each do |resolution|
+      with_long_wav(100_000_000) do |path|
+        assert_ruby_success(<<~'CODE', path, resolution)
+          require "audiowaveform"
+          target = Thread.current
+          interrupter = Thread.new do
+            Thread.pass until target.status == "sleep"
+            # Allow the decoder to open the input before removing its pathname.
+            sleep 0.02
+            File.unlink(ARGV.fetch(0)) unless Gem.win_platform?
+            3.times do
+              target.wakeup
+              sleep 0.005
+            end
+          end
+          options = ARGV.fetch(1) == "points" ? {points: 110} : {samples_per_pixel: 4096}
+          waveform = AudioWaveform.generate(ARGV.fetch(0), **options)
+          interrupter.value
+          expected_length = options[:points] || (100_000_000.fdiv(4096)).ceil
+          abort "wrong point count" unless waveform.length == expected_length
+          abort "lost decoded frames" unless waveform.duration == 6250.0
+          abort "changed peaks" unless waveform.data.all?(&:zero?)
+        CODE
+      end
+    end
+  end
+
+  def test_signal_handler_can_return_normally_during_generation
+    skip "USR1 is unavailable" unless Signal.list.key?("USR1") && !Gem.win_platform?
+
+    with_long_wav(100_000_000) do |path|
+      assert_ruby_success(<<~'CODE', path)
+        require "audiowaveform"
+        handled = 0
+        Signal.trap("USR1") { GC.start; handled += 1 }
+        target = Thread.current
+        [{points: 110}, {samples_per_pixel: 4096}].each do |options|
+          before = handled
+          interrupter = Thread.new do
+            Thread.pass until target.status == "sleep"
+            3.times do |index|
+              Process.kill("USR1", Process.pid)
+              Thread.pass until handled > before + index
+            end
+          end
+          waveform = AudioWaveform.generate(ARGV.fetch(0), **options)
+          abort "signal handling deferred until decoding finished" unless handled == before + 3
+          interrupter.value
+          expected_length = options[:points] || (100_000_000.fdiv(4096)).ceil
+          abort "wrong result after signal" unless waveform.length == expected_length && waveform.data.all?(&:zero?)
+        end
+      CODE
+    end
+  end
+
+  def test_signal_handler_unwinds_with_its_original_exception_or_throw_value
+    skip "USR1 is unavailable" unless Signal.list.key?("USR1") && !Gem.win_platform?
+
+    with_long_wav(500_000_000) do |path|
+      assert_ruby_success(<<~'CODE', path)
+        require "audiowaveform"
+        target = Thread.current
+        [{points: 110}, {samples_per_pixel: 2}].each do |options|
+          [:raise, :throw].each do |kind|
+            expected = kind == :raise ? RuntimeError.new("signal interruption") : Object.new
+            Signal.trap("USR1") do
+              GC.start
+              kind == :raise ? raise(expected) : throw(:cancel, expected)
+            end
+            interrupter = Thread.new do
+              Thread.pass until target.status == "sleep"
+              sleep 0.02
+              Process.kill("USR1", Process.pid)
+            end
+            actual = catch(:cancel) do
+              begin
+                AudioWaveform.generate(ARGV.fetch(0), **options)
+                abort "generation ignored signal interruption"
+              rescue RuntimeError => error
+                error
+              end
+            end
+            interrupter.value
+            abort "changed signal payload" unless actual.equal?(expected)
+          end
+        end
+      CODE
+    end
+  end
+
+  def test_thread_kill_stops_generation_and_runs_ensure
+    with_long_wav(500_000_000) do |path|
+      assert_ruby_success(<<~'CODE', path)
+        require "audiowaveform"
+        [{points: 110}, {samples_per_pixel: 2}].each do |options|
+          ensured = false
+          worker = Thread.new do
+            begin
+              AudioWaveform.generate(ARGV.fetch(0), **options)
+              abort "generation finished before Thread#kill"
+            ensure
+              ensured = true
+            end
+          end
+          Thread.pass until worker.status == "sleep"
+          sleep 0.02
+          worker.kill
+          abort "Thread#kill did not stop decoding promptly" unless worker.join(2)
+          abort "Thread#kill skipped Ruby ensure" unless ensured
+        end
+      CODE
+    end
+  end
+
   def test_peak_arrays_survive_gc_and_concurrent_access
     waveform = AudioWaveform.generate(fixture("stereo.wav"), points: 110, split_channels: true)
     expected = waveform.data
