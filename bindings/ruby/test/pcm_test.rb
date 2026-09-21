@@ -169,6 +169,21 @@ class PcmTest < Minitest::Test
     assert_same expected, actual
   end
 
+  def test_reader_stop_iteration_propagates_instead_of_returning_partial_peaks
+    expected = StopIteration.new("producer stopped unexpectedly")
+    input = Object.new
+    reads = 0
+    block = [-2000, 1000].pack("s<*") * 8192
+    input.define_singleton_method(:read) do |_, outbuf|
+      reads += 1
+      raise expected if reads > 1
+      outbuf.replace(block)
+    end
+
+    error = assert_raises(StopIteration) { AudioWaveform.generate_pcm(input, **OPTIONS) }
+    assert_same expected, error
+  end
+
   def test_timeout_while_waiting_for_pipe_data_is_prompt_and_does_not_close_input
     reader, writer = IO.pipe
     reader.binmode

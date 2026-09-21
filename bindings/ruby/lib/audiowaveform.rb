@@ -68,7 +68,8 @@ module AudioWaveform
       stream = Native.pcm_stream(format.to_s, sample_rate, channels, samples_per_pixel,
         split_channels, [amplitude_kind, amplitude_value])
       buffer = String.new(capacity: 32_768, encoding: Encoding::BINARY)
-      loop do
+      # Kernel#loop rescues StopIteration; reader failures must propagate.
+      while true
         chunk = input.read(32_768, buffer)
         break if chunk.nil?
         raise TypeError, "PCM read must return a String or nil" unless chunk.is_a?(String)
