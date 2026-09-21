@@ -126,7 +126,8 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
                         channels: channels_mode,
                         gain,
                     };
-                    let waveform = generate(&path, options).unwrap();
+                    let waveform = generate(&path, options)
+                        .unwrap_or_else(|error| panic!("{name} {options:?}: {error}"));
                     assert_eq!(waveform.source_frames(), frames as u64, "{name}");
                     assert_eq!(waveform.sample_rate(), rate, "{name}");
                     assert_eq!(waveform.duration(), frames as f64 / f64::from(rate));

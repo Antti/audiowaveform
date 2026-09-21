@@ -52,6 +52,32 @@
       "-c:a",
       "aac",
       "-movie_timescale",
+      "88200",
+      "$FIXTURES/short-88200.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "96000",
+      "$FIXTURES/short-96000.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
       "44100",
       "$FIXTURES/odd.m4a"
     ],
@@ -190,6 +216,20 @@
       "signal": "tone"
     },
     {
+      "file": "short-88200.m4a",
+      "rate": 88200,
+      "frames": 4410,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "short-96000.m4a",
+      "rate": 96000,
+      "frames": 4800,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
       "file": "odd.m4a",
       "rate": 44100,
       "frames": 2206,
@@ -283,6 +323,8 @@
     "short-32000.m4a": "9d6bc68de9733c91f217b22eae062683cf46bbefd9f7f07c1ae26a00453a5af5",
     "short-44100.m4a": "9c192436067b8426974122e3d38fdcce804749c0d97efdcfdde80047faf34039",
     "short-48000.m4a": "44c81e3bfc90b5f27c18eb71961730dcf258e13340fe7f8a06507f279badde25",
+    "short-88200.m4a": "b3b2a2dfa70aa4c4482d2cb45061e95750a2a984be311bfc85a0723afe9e693a",
+    "short-96000.m4a": "a03e9eebd59da8afb83073a3a9f930dbf14d296ac7526bc60b441d336e726582",
     "silence.m4a": "26b1e4cfb80dbadef7d8aa3db1a6814c42def17535c52b4967b6b5f6ecd9cc53",
     "silent-edges.m4a": "65c9de3f11a3718d8e9d6d14eb15eec6ec9ffffa5c91087e3a0aa8fc2289d0ec",
     "tracks.mp4": "eae4f634572a19b11b9fe8347875aff48b1b7b28c993bf742bfaa50104c62cbf"

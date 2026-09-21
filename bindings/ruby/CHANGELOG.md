@@ -5,6 +5,7 @@
 - Trim AAC/MP4 priming and padding from the selected track's edit list and
   sample timing before counting frames or generating peaks. A 50 ms clip now
   produces a 50 ms waveform with either exact points or fixed-size buckets.
+  Use the decoder's resolved sample rate, including 88.2 and 96 kHz AAC.
   Keep streaming buffers and genuine silence; do not guess encoder delay.
 - Support leading empty edits followed by one contiguous, normal-speed media
   edit in nonfragmented MP4. Render the leading gap as silence with bounded

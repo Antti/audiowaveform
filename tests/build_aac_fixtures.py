@@ -34,6 +34,8 @@ with tempfile.TemporaryDirectory() as temporary:
     encode("short-44100.m4a", 44100, 2205)
     encode("short-48000.m4a", 48000, 2400)
     encode("short-32000.m4a", 32000, 1600)
+    encode("short-88200.m4a", 88200, 4410)
+    encode("short-96000.m4a", 96000, 4800)
     encode("odd.m4a", 44100, 2206)
     encode("one.m4a", 44100, 1)
     encode("silence.m4a", 44100, 2205, signal="silence")

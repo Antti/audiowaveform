@@ -211,7 +211,7 @@ restoration. Eight integration tests decode newly generated AAC fixtures and
 compare peaks with independent batch arithmetic over the known playback slice.
 
 The 44.1 kHz 50 ms fixture decodes to 4,096 raw frames but retains exactly 2,205
-frames and 110 points. Other cases cover 32/48 kHz, one-frame and odd-length
+frames and 110 points. Other cases cover 32/48/88.2/96 kHz, one-frame and odd-length
 clips, mono/stereo, fixed/normalized gain, direct 8-bit output, true silence and
 silent edges, changed edit offsets (including 2,112), empty playback, absent
 edits, coarse movie-clock rounding, video before multiple audio tracks,
@@ -224,10 +224,11 @@ and 30-second mono AAC at 44.1 kHz, each producing 110 points, reports identical
 application capacities: 8,192 bytes of sample scratch and 456 bytes of
 peak/current storage. Decoder/container allocations are outside these figures.
 
-Ruby 4.0.5 passes 73 tests / 1,601 assertions and RBS validation. An isolated
+Ruby 4.0.5 passes 73 tests / 1,689 assertions and RBS validation. An isolated
 source-gem installation passes the numeric/codec/PCM checks plus an AAC check
-requiring a 50 ms duration and 110 points. This is a local development build of
-the unchanged 0.4.0 package version, not a published release.
+requiring a 50 ms duration and 110 points at 44.1, 88.2, and 96 kHz. This is a
+local development build of the unchanged 0.4.0 package version, not a published
+release.
 
 The compatibility follow-up covers leading empty edits (including versions 0/1
 and summed movie-clock durations), coarse media timestamps with and without an
@@ -242,3 +243,9 @@ Increasing a leading empty edit to ten seconds preserves application buffer
 capacities with fixed and normalized gain at 110 points. A much larger empty
 edit is cancelled during generation in both resolution modes, without building
 a whole-gap sample buffer. The original 50 ms regression remains covered.
+
+Playback bounds use the initialized AAC decoder's sample rate from
+AudioSpecificConfig, which can differ from the container sample-entry rate.
+The 88.2 and 96 kHz fixtures failed with `AAC/MP4 sample rate changed` before
+this correction. They now retain exactly 4,410 and 4,800 frames, respectively,
+with peaks checked in both resolution modes and installed-gem coverage.

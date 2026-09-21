@@ -11,6 +11,7 @@ class CodecsTest < Minitest::Test
       [{points: 110}, {samples_per_pixel: 23}].each do |options|
         [false, true].each do |split|
           w = AudioWaveform.generate(File.join(directory, entry.fetch("file")), split_channels: split, **options)
+          assert_equal entry.fetch("rate"), w.sample_rate, entry.fetch("file")
           assert_equal frames.fdiv(entry.fetch("rate")), w.duration, entry.fetch("file")
           assert_equal(options[:points] || (frames.fdiv(23)).ceil, w.length)
           assert_equal(split ? entry.fetch("channels") : 1, w.channels)

@@ -274,26 +274,31 @@ impl Session {
             .as_ref()
             .and_then(|params| params.audio())
             .ok_or(Error::InvalidAudio("missing audio codec parameters"))?;
-        let playback =
-            if format.format_info().short_name == "isomp4" && params.codec == CODEC_ID_AAC {
-                crate::mp4::playback(
-                    &mut source.metadata,
-                    track.id,
-                    params
-                        .sample_rate
-                        .filter(|rate| *rate > 0)
-                        .ok_or(Error::InvalidAudio("AAC/MP4 has no sample rate"))?,
-                    cancelled,
-                )?
-            } else {
-                None
-            };
+        let aac_mp4 = format.format_info().short_name == "isomp4" && params.codec == CODEC_ID_AAC;
         let decoder = symphonia::default::get_codecs().make_audio_decoder(
             params,
+            // This layer owns AAC/MP4 trimming, including the untrimmed fallback
+            // for fragmented files. Other codecs keep the decoder's gapless mode.
             &AudioDecoderOptions::default()
-                .gapless(playback.is_none())
+                .gapless(!aac_mp4)
                 .verify(true),
         )?;
+        let playback = if aac_mp4 {
+            crate::mp4::playback(
+                &mut source.metadata,
+                track.id,
+                // AudioSpecificConfig can override the container sample-entry
+                // rate, notably above the 16.16 field's 65,535 Hz limit.
+                decoder
+                    .codec_params()
+                    .sample_rate
+                    .filter(|rate| *rate > 0)
+                    .ok_or(Error::InvalidAudio("AAC/MP4 has no sample rate"))?,
+                cancelled,
+            )?
+        } else {
+            None
+        };
         let track = track.id;
         Ok(Self {
             playback,
