@@ -184,3 +184,13 @@ with `points: u32::MAX` retains zero peak allocation.
 Rust all-feature/no-default-feature tests and strict Clippy pass, along with
 Ruby's 71 tests / 1,391 assertions and RBS validation. No Ruby API change is
 needed; `statistics().decode_passes` records the actual Rust decoding work.
+
+The subsequent internal refactor separates fixed-resolution generation,
+exact-point generation, and replay, keeps provisional counts with their peaks,
+and gives peak storage ownership of gain handling. Ruby GVL/interrupt code is
+extracted into a private module with only visibility and formatting changes.
+All-feature, no-default-feature, WAV-only, and FLAC-only Rust tests still pass,
+including peak, pass-count, and allocation checks. Formatting and strict Clippy
+pass in both workspaces. Ruby passes 71 tests / 1,391 assertions and RBS checks;
+an isolated source-gem installation verifies that the new module is packaged
+and builds correctly.

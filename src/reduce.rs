@@ -8,12 +8,87 @@ pub(crate) struct Signal {
 }
 
 enum Peaks {
-    Integer(Vec<i16>),
+    Integer { gain: f64, data: Vec<i16> },
     Unscaled(Vec<f64>),
 }
 
+impl Peaks {
+    fn new(gain: Gain, capacity: usize) -> Result<Self, Error> {
+        match gain {
+            Gain::Fixed(gain) => {
+                let mut data = Vec::new();
+                data.try_reserve_exact(capacity)?;
+                Ok(Self::Integer { gain, data })
+            }
+            Gain::Normalize => {
+                let mut data = Vec::new();
+                data.try_reserve_exact(capacity)?;
+                Ok(Self::Unscaled(data))
+            }
+        }
+    }
+
+    fn allocated_bytes(&self) -> usize {
+        match self {
+            Self::Integer { data, .. } => data.capacity() * size_of::<i16>(),
+            Self::Unscaled(data) => data.capacity() * size_of::<f64>(),
+        }
+    }
+
+    fn append(&mut self, current: &[f64]) -> Result<(), Error> {
+        match self {
+            Self::Integer { gain, data } => {
+                data.try_reserve(current.len())?;
+                data.extend(
+                    current
+                        .iter()
+                        .map(|&sample| (sample * *gain * 32768.0) as i16),
+                );
+            }
+            Self::Unscaled(data) => {
+                data.try_reserve(current.len())?;
+                data.extend_from_slice(current);
+            }
+        }
+        Ok(())
+    }
+
+    /// Return signed peaks and the maximum simultaneous storage during finish.
+    fn finish(self, cancelled: &mut impl FnMut() -> bool) -> Result<(Vec<i16>, usize), Error> {
+        match self {
+            Self::Integer { data, .. } => {
+                let bytes = data.capacity() * size_of::<i16>();
+                Ok((data, bytes))
+            }
+            Self::Unscaled(unscaled) => {
+                let mut maximum = 0.0_f64;
+                for chunk in unscaled.chunks(1024) {
+                    poll(cancelled)?;
+                    maximum = chunk.iter().fold(maximum, |m, sample| m.max(sample.abs()));
+                }
+                let mut data = Vec::new();
+                data.try_reserve_exact(unscaled.len())?;
+                for chunk in unscaled.chunks(1024) {
+                    poll(cancelled)?;
+                    data.extend(chunk.iter().map(|sample| {
+                        if maximum == 0.0 {
+                            0
+                        } else {
+                            (sample / maximum * 32767.0) as i16
+                        }
+                    }));
+                }
+                let bytes =
+                    unscaled.capacity() * size_of::<f64>() + data.capacity() * size_of::<i16>();
+                Ok((data, bytes))
+            }
+        }
+    }
+}
+
 pub(crate) struct Reducer {
-    options: Options,
+    resolution: Resolution,
+    channel_mode: ChannelMode,
     signal: Signal,
     channels: usize,
     total: Option<u64>,
@@ -58,17 +133,10 @@ impl Reducer {
         let width = elements(1, channels)?;
         current.try_reserve_exact(width)?;
         current.resize(width, 0.0);
-        let peaks = if options.gain == Gain::Normalize {
-            let mut data = Vec::new();
-            data.try_reserve_exact(capacity)?;
-            Peaks::Unscaled(data)
-        } else {
-            let mut data = Vec::new();
-            data.try_reserve_exact(capacity)?;
-            Peaks::Integer(data)
-        };
+        let peaks = Peaks::new(options.gain, capacity)?;
         let mut reducer = Self {
-            options,
+            resolution: options.resolution,
+            channel_mode: options.channels,
             signal,
             channels,
             total,
@@ -86,16 +154,12 @@ impl Reducer {
     }
 
     pub(crate) fn allocated_bytes(&self) -> usize {
-        self.current.capacity() * size_of::<f64>()
-            + match &self.peaks {
-                Peaks::Integer(data) => data.capacity() * size_of::<i16>(),
-                Peaks::Unscaled(data) => data.capacity() * size_of::<f64>(),
-            }
+        self.current.capacity() * size_of::<f64>() + self.peaks.allocated_bytes()
     }
 
     fn window(&self) -> (u128, u128) {
         let index = u128::from(self.points);
-        match self.options.resolution {
+        match self.resolution {
             Resolution::Points(count) => {
                 let frames = u128::from(self.total.unwrap_or(0));
                 let start = index * frames / u128::from(count);
@@ -127,14 +191,14 @@ impl Reducer {
             if self.total.is_some_and(|total| self.frames >= total) {
                 return Err(Error::InputChanged);
             }
-            let mono = if self.options.channels == ChannelMode::Mono {
+            let mono = if self.channel_mode == ChannelMode::Mono {
                 mean(frame)
             } else {
                 0.0
             };
             loop {
                 for (channel, &source_sample) in frame.iter().take(self.channels).enumerate() {
-                    let sample = if self.options.channels == ChannelMode::Mono {
+                    let sample = if self.channel_mode == ChannelMode::Mono {
                         mono
                     } else {
                         source_sample
@@ -152,7 +216,7 @@ impl Reducer {
                     break;
                 }
                 self.emit()?;
-                if let Resolution::Points(count) = self.options.resolution
+                if let Resolution::Points(count) = self.resolution
                     && self.points == u64::from(count)
                 {
                     break;
@@ -170,23 +234,7 @@ impl Reducer {
     }
 
     fn emit(&mut self) -> Result<(), Error> {
-        match &mut self.peaks {
-            Peaks::Integer(data) => {
-                let Gain::Fixed(gain) = self.options.gain else {
-                    unreachable!()
-                };
-                data.try_reserve(self.current.len())?;
-                data.extend(
-                    self.current
-                        .iter()
-                        .map(|&sample| (sample * gain * 32768.0) as i16),
-                );
-            }
-            Peaks::Unscaled(data) => {
-                data.try_reserve(self.current.len())?;
-                data.extend_from_slice(&self.current);
-            }
-        }
+        self.peaks.append(&self.current)?;
         self.points = self.points.checked_add(1).ok_or(Error::SizeOverflow)?;
         (self.window_start, self.window_end) = self.window();
         self.used = false;
@@ -205,34 +253,7 @@ impl Reducer {
             self.emit()?;
         }
         let scratch_bytes = self.current.capacity() * size_of::<f64>();
-        let (data, bytes) = match self.peaks {
-            Peaks::Integer(data) => {
-                let bytes = data.capacity() * size_of::<i16>();
-                (data, bytes)
-            }
-            Peaks::Unscaled(unscaled) => {
-                let mut maximum = 0.0_f64;
-                for chunk in unscaled.chunks(1024) {
-                    poll(cancelled)?;
-                    maximum = chunk.iter().fold(maximum, |m, sample| m.max(sample.abs()));
-                }
-                let mut data = Vec::new();
-                data.try_reserve_exact(unscaled.len())?;
-                for chunk in unscaled.chunks(1024) {
-                    poll(cancelled)?;
-                    data.extend(chunk.iter().map(|sample| {
-                        if maximum == 0.0 {
-                            0
-                        } else {
-                            (sample / maximum * 32767.0) as i16
-                        }
-                    }));
-                }
-                let bytes =
-                    unscaled.capacity() * size_of::<f64>() + data.capacity() * size_of::<i16>();
-                (data, bytes)
-            }
-        };
+        let (data, bytes) = self.peaks.finish(cancelled)?;
         statistics.peak_capacity_bytes = bytes + scratch_bytes;
         Ok(Waveform {
             data,
@@ -340,7 +361,7 @@ mod tests {
         )
         .unwrap();
         let current = reducer.current.as_ptr();
-        let Peaks::Integer(data) = &reducer.peaks else {
+        let Peaks::Integer { data, .. } = &reducer.peaks else {
             panic!()
         };
         let output = data.as_ptr();
@@ -348,7 +369,7 @@ mod tests {
         for _ in 0..100 {
             reducer.feed(&[0.25; 100], &mut || false).unwrap();
         }
-        let Peaks::Integer(data) = &reducer.peaks else {
+        let Peaks::Integer { data, .. } = &reducer.peaks else {
             panic!()
         };
         assert_eq!(data.as_ptr(), output);
