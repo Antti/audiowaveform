@@ -30,11 +30,15 @@ module GemPublishing
     # This check runs before the first network request or mutation.
     system(RbConfig.ruby, File.join(__dir__, "check_release.rb"), directory, exception: true)
     paths = Dir[File.join(directory, "*.gem")].sort
-    # Development packages must never be uploaded before licensing is settled.
+    # Reject old development packages and unexpected license metadata before
+    # any lookup or upload, even when all platform artifacts are present.
     paths.each do |path|
       spec = Gem::Package.new(path).spec
       if spec.metadata["release_status"] == "license-review-pending" || spec.licenses.include?("Nonstandard")
         raise "Release license is pending for #{spec.full_name}"
+      end
+      unless spec.licenses.sort == ["Apache-2.0", "MIT"]
+        raise "Unexpected release licenses for #{spec.full_name}: #{spec.licenses.inspect}"
       end
     end
     # Check every artifact for conflicts before publishing any of them.

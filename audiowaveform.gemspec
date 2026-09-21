@@ -9,21 +9,20 @@ Gem::Specification.new do |spec|
   spec.summary = "Streaming audio waveform peaks for Ruby, powered by Rust."
   spec.description = "Generate mono or multichannel min/max peaks with exact point counts and direct 8- or 16-bit arrays."
   spec.homepage = "https://github.com/Antti/audiowaveform"
-  # Local prerelease only. This marker is not a license grant.
-  spec.license = "Nonstandard"
+  # Either license may be chosen; see LICENSE.md.
+  spec.licenses = ["MIT", "Apache-2.0"]
   spec.required_ruby_version = ">= 3.2"
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["cargo_crate_name"] = "audiowaveform-ruby"
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["rubygems_mfa_required"] = "true"
-  spec.metadata["release_status"] = "license-review-pending"
 
   # Explicit source patterns exclude local binaries, build output, tests, and
   # the former repository even when building from an uncommitted checkout.
   spec.files = Dir.chdir(__dir__) do
     Dir[
       "Cargo.toml", "Cargo.lock", "src/**/*.rs", "README.md", "PROVENANCE.md",
-      "LICENSE-STATUS.md", "THIRD-PARTY-NOTICES.md", "third-party/**/*",
+      "LICENSE.md", "LICENSE-MIT", "LICENSE-APACHE", "THIRD-PARTY-NOTICES.md", "third-party/**/*",
       "VALIDATION.md", "contract/SPEC.md",
       "bindings/ruby/Cargo.toml", "bindings/ruby/Cargo.lock",
       "bindings/ruby/README.md", "bindings/ruby/CHANGELOG.md", "bindings/ruby/PROVENANCE.md",

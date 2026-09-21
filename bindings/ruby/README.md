@@ -1,7 +1,8 @@
 # AudioWaveform for Ruby
 
 A native Ruby interface to the streaming Rust core. Ruby 3.2 or newer is required.
-This local `0.3.0.pre.1` build is not published; release licensing is pending.
+This `0.3.0.pre.1` build is not published. The replacement is licensed under
+MIT or Apache-2.0, at your option; see the root [license notice](../../LICENSE.md).
 
 ```ruby
 require "audiowaveform"

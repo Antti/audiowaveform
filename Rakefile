@@ -31,7 +31,7 @@ AudioWaveformExtensionTask.new("audiowaveform-ruby", GEMSPEC) do |extension|
     end
     spec.files.select! do |path|
       path.start_with?("bindings/ruby/lib/", "sig/", "third-party/") ||
-        %w[LICENSE-STATUS.md THIRD-PARTY-NOTICES.md PROVENANCE.md VALIDATION.md contract/SPEC.md README.md bindings/ruby/README.md bindings/ruby/CHANGELOG.md bindings/ruby/PROVENANCE.md].include?(path)
+        %w[LICENSE.md LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md PROVENANCE.md VALIDATION.md contract/SPEC.md README.md bindings/ruby/README.md bindings/ruby/CHANGELOG.md bindings/ruby/PROVENANCE.md].include?(path)
     end
   end
 end

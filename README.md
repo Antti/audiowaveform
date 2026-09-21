@@ -2,7 +2,7 @@
 
 A new Rust implementation of the audio-to-peaks contract in
 [contract/SPEC.md](contract/SPEC.md). `waveform-core` is a provisional local
-package name; publishing is disabled and a release license has not been chosen.
+package name; crates.io publishing is not yet enabled.
 
 This standalone Cargo workspace has no dependency on the former library.
 It contains audio decoding and peak generation, with no waveform export,
@@ -106,6 +106,13 @@ tests need neither Python nor FFmpeg. Rebuilding the tiny numeric WAVs uses
 `python3 tests/build_codec_fixtures.py` and FFmpeg with the listed encoders.
 The memory measurement uses `/usr/bin/time` on macOS or Linux and creates
 ignored files under `measurements/`.
+
+## License
+
+The replacement core and Ruby integration are licensed under either
+[MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your option.
+See [LICENSE.md](LICENSE.md) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
+for dependency terms.
 
 ## Legacy releases
 

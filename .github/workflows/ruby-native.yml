@@ -14,7 +14,7 @@ on:
       - "sig/**"
       - "contract/**"
       - "third-party/**"
-      - "LICENSE-STATUS.md"
+      - "LICENSE*"
       - "THIRD-PARTY-NOTICES.md"
       - "Cargo.*"
       - "Gemfile"

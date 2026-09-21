@@ -25,7 +25,7 @@ files.each do |path|
   abort "Unexpected gem: #{spec.full_name}" unless spec.name == "audiowaveform" &&
     spec.version.to_s == AudioWaveform::VERSION
   abort "Unexpected or duplicate platform: #{spec.platform}" unless platforms.delete(spec.platform.to_s)
-  abort "Missing license or signatures: #{path}" unless %w[LICENSE-STATUS.md THIRD-PARTY-NOTICES.md sig/audiowaveform.rbs].all? { |file| spec.files.include?(file) }
+  abort "Missing license or signatures: #{path}" unless %w[LICENSE.md LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md sig/audiowaveform.rbs].all? { |file| spec.files.include?(file) }
 
   binaries = spec.files.grep(/\.(?:bundle|so|dll)\z/)
   if spec.platform == Gem::Platform::RUBY

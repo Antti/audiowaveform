@@ -6,8 +6,8 @@ linked into any one binary. Original license/notice texts are retained under
 `third-party/`; identical texts share a content-addressed file.
 
 Symphonia is unmodified MPL-2.0 code. Its covered source is available in the
-exact versioned source packages below. These notices do not replace the
-pending license decision for this project. Ruby itself is supplied by the
+exact versioned source packages below. These notices supplement this project's
+dual-license choice in [LICENSE.md](LICENSE.md). Ruby itself is supplied by the
 user, not bundled into the gem. Build-tool Ruby gems are also not bundled.
 
 Regenerate with `python3 bindings/ruby/script/update_notices.py` after

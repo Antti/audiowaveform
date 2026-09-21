@@ -13,7 +13,8 @@ Exports were removed; validation, cancellation, peak arrays, package contents,
 and tests were adapted. Ruby safety tests also retain the reviewed personal
 GC/GVL/subprocess-testing approach, using newly generated or sparse audio. The new contract test was taken from the separately
 prepared replacement contract, not from the old core's output. Test media comes
-from this project's generated corpus. Release licensing remains pending.
+from this project's generated corpus. The author selected MIT OR Apache-2.0
+for this replacement; see the root [license notice](../../LICENSE.md).
 
 The following SHA-256 hashes record the *input* files before adaptation, not the
 resulting files. Build/release logic is retained where applicable; this is not a

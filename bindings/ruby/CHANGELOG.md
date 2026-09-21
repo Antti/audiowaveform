@@ -15,4 +15,5 @@
   `ArgumentError`; integer point indices outside the waveform raise `IndexError`.
 - Clamp pixels-per-second resolution to at least two frames per point.
 
-This is a local prerelease. Publishing remains disabled pending release licensing.
+The replacement is dual-licensed under MIT or Apache-2.0, at your option.
+Legacy releases retain their original GPL-3.0-or-later terms.

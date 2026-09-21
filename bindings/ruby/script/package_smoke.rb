@@ -18,7 +18,8 @@ module PackageSmoke
     raise "Native package requires compilation/dependencies" if native && (!spec.extensions.empty? || !spec.dependencies.empty?)
     forbidden = spec.files.grep(%r{\A(?:crates/|fixtures/|target/|tmp/|\.git/|COPYING\z)})
     raise "Legacy/build files in gem: #{forbidden}" unless forbidden.empty?
-    %w[LICENSE-STATUS.md THIRD-PARTY-NOTICES.md third-party/manifest.json sig/audiowaveform.rbs].each do |path|
+    raise "Wrong package licenses" unless spec.licenses.sort == ["Apache-2.0", "MIT"]
+    %w[LICENSE.md LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md third-party/manifest.json sig/audiowaveform.rbs].each do |path|
       raise "Missing #{path}" unless spec.files.include?(path)
     end
     binaries = spec.files.grep(/\.(?:bundle|so|dll|dylib)\z/)

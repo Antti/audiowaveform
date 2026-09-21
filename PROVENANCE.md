@@ -38,12 +38,13 @@ independence or ownership by themselves.
 
 ## License and distribution status
 
-Publishing is disabled. The local Ruby prerelease is `0.3.0.pre.1`, with a
-`Nonstandard` marker and an explicit publishing-script guard; this marker does
-not grant a release license. No permissive license is asserted yet, and no old GPL
-code or release is relicensed by this project. Complete the source/provenance
-review and select the new project's license before distribution. Existing
-release licenses and source obligations remain independent of Git history.
+On 2026-09-21, the author selected `MIT OR Apache-2.0` for the replacement Rust
+core and reviewed personal Ruby integration. Both license texts and the choice
+of terms are included in source/native gems; see [LICENSE.md](LICENSE.md).
+The Ruby prerelease is `0.3.0.pre.1`; crates.io publishing remains disabled
+pending final crate naming. No old GPL code or release is relicensed by this
+project. The provenance limitations above remain applicable; license selection
+and a new Git history do not themselves establish legal independence.
 
 The core's only direct runtime dependency is Symphonia, under MPL-2.0. The locked
 runtime/build graph contains MPL-2.0 Symphonia packages and dependencies with
@@ -64,7 +65,7 @@ The archived release sources are not part of this project's Git ancestry.
 
 Ruby integration and source/native package checks are recorded in
 [VALIDATION.md](VALIDATION.md). The repository cutover is separate from gem/crate
-publication; release licensing and cross-platform checks still apply.
+publication; cross-platform release checks still apply.
 
 ## Ruby dependency and packaging follow-up
 

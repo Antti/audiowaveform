@@ -115,7 +115,7 @@ class ReleaseTest < Minitest::Test
       binaries = platform == "ruby" ? [] : rubies.map do |version|
         "bindings/ruby/lib/audiowaveform/#{version}/audiowaveform_ruby.#{extension}"
       end
-      files = ["LICENSE-STATUS.md", "THIRD-PARTY-NOTICES.md", "sig/audiowaveform.rbs", *extensions] + binaries
+      files = ["LICENSE.md", "LICENSE-MIT", "LICENSE-APACHE", "THIRD-PARTY-NOTICES.md", "sig/audiowaveform.rbs", *extensions] + binaries
       files.each do |path|
         FileUtils.mkdir_p(File.dirname(path))
         File.write(path, "fixture")

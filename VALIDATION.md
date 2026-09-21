@@ -62,11 +62,11 @@ The runtime/build dependency tree contains no old crate, image/PNG library, or
 waveform serialization dependency.
 
 `cargo package --offline --allow-dirty` builds and verifies the standalone source
-crate. After the Ruby notice additions its 113 archive entries were inspected:
+crate. After dual licensing, its 116 archive entries were inspected:
 no old workspace, Ruby binding,
 audit, Git metadata, build output, or measurement files are included. Cargo's
-missing-license metadata warning is expected while the release license remains
-unselected and publishing is disabled.
+metadata now declares `MIT OR Apache-2.0`; both license texts are included in
+subsequent package checks.
 
 ## Ruby integration and packaging
 
@@ -116,7 +116,7 @@ The configured Linux/macOS/Windows, glibc/musl, and Ruby 3.2/3.3/3.4/4.0 CI
 matrix has not been run remotely for this new repository. Ruby 3.2 and 3.3
 were not available in this local check. The publishing workflow has not been
 carried over; build/test workflows and the guarded publishing helper are local.
-Final crate naming, license selection/review, and full platform release checks
+Final crate naming and full platform release checks
 remain future work. The legacy repository is preserved at
 [Antti/audiowaveform-legacy](https://github.com/Antti/audiowaveform-legacy);
 the active repository has independent history. No replacement gem or crate has
