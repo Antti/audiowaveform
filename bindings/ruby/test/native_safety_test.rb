@@ -132,8 +132,11 @@ class NativeSafetyTest < Minitest::Test
             end
           end
           waveform = AudioWaveform.generate(ARGV.fetch(0), **options)
-          abort "signal handling deferred until decoding finished" unless handled == before + 3
+          # The first signal is sent while native generation has the GVL
+          # released. Ruby may schedule later signal/handler round trips after
+          # generation returns, so wait for the sender before checking them.
           interrupter.value
+          abort "signal handler did not run" unless handled == before + 3
           expected_length = options[:points] || (100_000_000.fdiv(4096)).ceil
           abort "wrong result after signal" unless waveform.length == expected_length && waveform.data.all?(&:zero?)
         end
