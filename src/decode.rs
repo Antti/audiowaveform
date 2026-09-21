@@ -5,7 +5,13 @@ use std::{
 };
 
 use symphonia::core::{
-    codecs::audio::{AudioDecoder, AudioDecoderOptions},
+    codecs::audio::{
+        AudioDecoder, AudioDecoderOptions,
+        well_known::{
+            CODEC_ID_FLAC, CODEC_ID_PCM_F32LE, CODEC_ID_PCM_F64LE, CODEC_ID_PCM_S16LE,
+            CODEC_ID_PCM_S24LE, CODEC_ID_PCM_S32LE, CODEC_ID_PCM_U8,
+        },
+    },
     formats::{FormatReader, TrackFlags, TrackType, probe::Hint},
     io::MediaSourceStream,
 };
@@ -53,58 +59,130 @@ fn generate_inner(
     }
     let session = Session::open(stream, &hint)?;
     let mut scratch = Vec::new();
-    let mut statistics = Statistics {
-        decode_passes: 1,
-        ..Statistics::default()
-    };
-
-    let mut reducer = None;
-    let summary = if matches!(options.resolution, Resolution::Points(_)) {
-        let (mut stream, counted) =
-            session.scan(&mut scratch, &mut cancelled, |_, samples, _| {
-                validate_samples(samples)
-            })?;
-        reducer = Some(Reducer::new(options, counted.signal, Some(counted.frames))?);
-        if counted.frames > 0 {
-            poll(&mut cancelled)?;
-            stream.seek(SeekFrom::Start(0))?;
-            let session = Session::open(stream, &hint)?;
-            statistics.decode_passes = 2;
-            let (_, generated) =
-                session.scan(&mut scratch, &mut cancelled, |signal, samples, cancel| {
-                    if signal != counted.signal {
-                        return Err(Error::InputChanged);
-                    }
-                    reducer
-                        .as_mut()
-                        .expect("reducer initialized before replay")
-                        .feed(samples, cancel)
-                })?;
-            if generated != counted {
-                return Err(Error::InputChanged);
-            }
+    let (reducer, decode_passes) = match options.resolution {
+        Resolution::Points(_) => {
+            reduce_points(session, options, &hint, &mut scratch, &mut cancelled)?
         }
-        counted
-    } else {
-        let (_, summary) =
-            session.scan(&mut scratch, &mut cancelled, |signal, samples, cancel| {
-                if reducer.is_none() {
-                    reducer = Some(Reducer::new(options, signal, None)?);
-                }
-                reducer
-                    .as_mut()
-                    .expect("reducer initialized above")
-                    .feed(samples, cancel)
-            })?;
-        summary
+        _ => (
+            reduce_fixed(session, options, &mut scratch, &mut cancelled)?,
+            1,
+        ),
     };
-    statistics.scratch_capacity_bytes = scratch.capacity() * size_of::<f64>();
-    let reducer = match reducer {
-        Some(reducer) => reducer,
-        None => Reducer::new(options, summary.signal, None)?,
+    let statistics = Statistics {
+        decode_passes,
+        scratch_capacity_bytes: scratch.capacity() * size_of::<f64>(),
+        ..Statistics::default()
     };
     poll(&mut cancelled)?;
     reducer.finish(statistics, &mut cancelled)
+}
+
+fn reduce_fixed(
+    session: Session,
+    options: Options,
+    scratch: &mut Vec<f64>,
+    cancelled: &mut impl FnMut() -> bool,
+) -> Result<Reducer, Error> {
+    let mut reducer = None;
+    let (_, summary) = session.scan(scratch, cancelled, |progress, samples, cancel| {
+        let reducer = match &mut reducer {
+            Some(reducer) => reducer,
+            slot @ None => slot.insert(Reducer::new(options, progress.signal, None)?),
+        };
+        reducer.feed(samples, cancel)
+    })?;
+    reducer.map_or_else(|| Reducer::new(options, summary.signal, None), Ok)
+}
+
+fn reduce_points(
+    session: Session,
+    options: Options,
+    hint: &Hint,
+    scratch: &mut Vec<f64>,
+    cancelled: &mut impl FnMut() -> bool,
+) -> Result<(Reducer, u8), Error> {
+    let mut provisional = session
+        .exact_frame_count()
+        .map(|expected| ProvisionalPoints {
+            expected,
+            reducer: None,
+        });
+    let (stream, counted) = session.scan(scratch, cancelled, |progress, samples, cancel| {
+        // Discard the hint and its peaks together before feeding mismatched
+        // channel dimensions or frames beyond the provisional last bucket.
+        if provisional.as_ref().is_some_and(|state| {
+            progress.signal != state.expected.signal || progress.frames > state.expected.frames
+        }) {
+            provisional = None;
+        }
+        match &mut provisional {
+            Some(state) => state.feed(options, samples, cancel),
+            None => validate_samples(samples),
+        }
+    })?;
+    if let Some(reducer) = provisional
+        .filter(|state| state.expected == counted)
+        .and_then(|state| state.reducer)
+    {
+        return Ok((reducer, 1));
+    }
+
+    // Provisional peaks have been dropped before allocating their replacement.
+    // The completed first pass already supplies the actual count for replay.
+    let mut reducer = Reducer::new(options, counted.signal, Some(counted.frames))?;
+    if counted.frames == 0 {
+        return Ok((reducer, 1));
+    }
+    replay(stream, hint, counted, &mut reducer, scratch, cancelled)?;
+    Ok((reducer, 2))
+}
+
+struct ProvisionalPoints {
+    expected: Scan,
+    reducer: Option<Reducer>,
+}
+
+impl ProvisionalPoints {
+    fn feed(
+        &mut self,
+        options: Options,
+        samples: &[f64],
+        cancelled: &mut impl FnMut() -> bool,
+    ) -> Result<(), Error> {
+        // Wait for actual audio so an empty input never allocates point storage.
+        let reducer = match &mut self.reducer {
+            Some(reducer) => reducer,
+            slot @ None => slot.insert(Reducer::new(
+                options,
+                self.expected.signal,
+                Some(self.expected.frames),
+            )?),
+        };
+        reducer.feed(samples, cancelled)
+    }
+}
+
+fn replay(
+    mut stream: MediaSourceStream<'static>,
+    hint: &Hint,
+    counted: Scan,
+    reducer: &mut Reducer,
+    scratch: &mut Vec<f64>,
+    cancelled: &mut impl FnMut() -> bool,
+) -> Result<(), Error> {
+    poll(cancelled)?;
+    stream.seek(SeekFrom::Start(0))?;
+    let session = Session::open(stream, hint)?;
+    let (_, generated) = session.scan(scratch, cancelled, |progress, samples, cancel| {
+        if progress.signal != counted.signal {
+            return Err(Error::InputChanged);
+        }
+        reducer.feed(samples, cancel)
+    })?;
+    if generated != counted {
+        return Err(Error::InputChanged);
+    }
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -151,7 +229,7 @@ impl Session {
             .ok_or(Error::InvalidAudio("missing audio codec parameters"))?;
         let decoder = symphonia::default::get_codecs().make_audio_decoder(
             params,
-            &AudioDecoderOptions::default().gapless(false).verify(true),
+            &AudioDecoderOptions::default().gapless(true).verify(true),
         )?;
         let track = track.id;
         Ok(Self {
@@ -161,11 +239,49 @@ impl Session {
         })
     }
 
+    /// Only native FLAC STREAMINFO and WAV PCM data extents have been audited
+    /// as exact frame counts here. Container durations, ADPCM block counts,
+    /// and counts affected by lossy codec delay/padding are not trusted.
+    /// Even these hints are checked against all frames actually decoded.
+    fn exact_frame_count(&self) -> Option<Scan> {
+        let track = self
+            .format
+            .tracks()
+            .iter()
+            .find(|track| track.id == self.track)?;
+        let params = track.codec_params.as_ref()?.audio()?;
+        let eligible = match self.format.format_info().short_name {
+            "flac" => params.codec == CODEC_ID_FLAC,
+            "wave" => matches!(
+                params.codec,
+                CODEC_ID_PCM_U8
+                    | CODEC_ID_PCM_S16LE
+                    | CODEC_ID_PCM_S24LE
+                    | CODEC_ID_PCM_S32LE
+                    | CODEC_ID_PCM_F32LE
+                    | CODEC_ID_PCM_F64LE
+            ),
+            _ => false,
+        };
+        if !eligible || track.delay.unwrap_or(0) != 0 || track.padding.unwrap_or(0) != 0 {
+            return None;
+        }
+        Some(Scan {
+            signal: Signal {
+                rate: params.sample_rate.filter(|rate| *rate > 0)?,
+                channels: params.channels.as_ref()?.count(),
+            },
+            frames: track.num_frames?,
+            track: self.track,
+        })
+        .filter(|scan| scan.signal.channels > 0)
+    }
+
     fn scan<C: FnMut() -> bool>(
         mut self,
         scratch: &mut Vec<f64>,
         cancelled: &mut C,
-        mut consume: impl FnMut(Signal, &[f64], &mut C) -> Result<(), Error>,
+        mut consume: impl FnMut(Scan, &[f64], &mut C) -> Result<(), Error>,
     ) -> Result<(MediaSourceStream<'static>, Scan), Error> {
         let mut observed = None;
         let mut frames = 0_u64;
@@ -210,7 +326,15 @@ impl Session {
             frames = frames
                 .checked_add(u64::try_from(decoded.frames()).map_err(|_| Error::SizeOverflow)?)
                 .ok_or(Error::SizeOverflow)?;
-            consume(signal, scratch, cancelled)?;
+            consume(
+                Scan {
+                    signal,
+                    frames,
+                    track: self.track,
+                },
+                scratch,
+                cancelled,
+            )?;
         }
         #[cfg(feature = "mkv")]
         let matroska = self.format.format_info().short_name == "matroska";

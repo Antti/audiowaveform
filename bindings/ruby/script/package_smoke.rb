@@ -41,10 +41,14 @@ module PackageSmoke
       )
       system(env, RbConfig.ruby, "-S", "gem", "install", "--local", "--ignore-dependencies", "--no-document",
         "--install-dir", directory, package, exception: true)
-      system(env, RbConfig.ruby, "-e", <<~'CODE', directory, ROOT, spec.version.to_s, exception: true)
+      system(env, RbConfig.ruby, "-e", <<~'CODE', directory, ROOT, spec.version.to_s, spec.full_name, exception: true)
         require "json"
-        directory, repository, version = ARGV
-        gem "audiowaveform", version
+        directory, repository, version, full_name = ARGV
+        # A globally installed native gem of the same version can outrank this
+        # source gem even when GEM_HOME is first. Activate the exact installed
+        # specification while leaving global build dependencies available.
+        installed_spec = File.join(directory, "specifications", "#{full_name}.gemspec")
+        Gem::Specification.load(installed_spec).activate
         require "audiowaveform"
         abort "wrong version" unless AudioWaveform::VERSION == version
         loaded = $LOADED_FEATURES.find { |path| path.match?(%r{/audiowaveform_ruby\.(bundle|so|dll)\z}) }
@@ -66,6 +70,12 @@ module PackageSmoke
           waveform = AudioWaveform.generate(File.join(codec_root, entry.fetch("file")), points: 110)
           abort "codec failed: #{entry.fetch('file')}" unless waveform.length == 110
         end
+        require "stringio"
+        pcm = StringIO.new([-300, 400, -500, 600, 7].pack("s<*"))
+        waveform = AudioWaveform.generate_pcm(pcm, format: :s16le, sample_rate: 8000, channels: 1, samples_per_pixel: 2)
+        abort "PCM stream failed" unless waveform.data == [-300, 400, -500, 600, 7, 7] && !pcm.closed?
+        mp3 = AudioWaveform.generate(File.join(codec_root, "audio.mp3"), points: 110)
+        abort "MP3 delay/padding retained" unless mp3.duration == 0.25 && mp3.point(0).first < -8000
         puts "Installed #{Gem.loaded_specs.fetch('audiowaveform').full_name}: 36 vectors and codec matrix passed on Ruby #{RUBY_VERSION}"
       CODE
     end

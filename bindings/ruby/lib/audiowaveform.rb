@@ -43,6 +43,44 @@ module AudioWaveform
       )
     end
 
+    # Consumes headerless interleaved PCM without seeking or closing the IO.
+    # The IO must implement read(length, outbuf), like IO and StringIO.
+    def generate_pcm(
+      input,
+      format:,
+      sample_rate:,
+      channels:,
+      samples_per_pixel: 256,
+      split_channels: false,
+      amplitude_scale: nil
+    )
+      raise ArgumentError, "input must respond to read(length, outbuf)" unless input.respond_to?(:read)
+      unless format.is_a?(String) || format.is_a?(Symbol)
+        raise ArgumentError, "format must be a PCM format name"
+      end
+      sample_rate = positive_integer(sample_rate, :sample_rate)
+      channels = positive_integer(channels, :channels, maximum: 65_535)
+      samples_per_pixel = positive_integer(samples_per_pixel, :samples_per_pixel, minimum: 2)
+      unless split_channels.equal?(true) || split_channels.equal?(false)
+        raise ArgumentError, "split_channels must be true or false"
+      end
+      amplitude_kind, amplitude_value = resolve_amplitude_scale(amplitude_scale)
+      stream = Native.pcm_stream(format.to_s, sample_rate, channels, samples_per_pixel,
+        split_channels, [amplitude_kind, amplitude_value])
+      buffer = String.new(capacity: 32_768, encoding: Encoding::BINARY)
+      # Kernel#loop rescues StopIteration; reader failures must propagate.
+      while true
+        chunk = input.read(32_768, buffer)
+        break if chunk.nil?
+        raise TypeError, "PCM read must return a String or nil" unless chunk.is_a?(String)
+        break if chunk.empty?
+        stream.push(chunk)
+      end
+      stream.finish
+    ensure
+      stream&.close
+    end
+
     private
 
     def resolve_path(input)
@@ -89,9 +127,9 @@ module AudioWaveform
       raise ArgumentError, "amplitude_scale must be a finite non-negative number or :auto"
     end
 
-    def positive_integer(value, name, minimum: 1)
-      unless value.is_a?(Integer) && value.between?(minimum, 0xffff_ffff)
-        raise ArgumentError, "#{name} must be an integer between #{minimum} and 4294967295"
+    def positive_integer(value, name, minimum: 1, maximum: 0xffff_ffff)
+      unless value.is_a?(Integer) && value.between?(minimum, maximum)
+        raise ArgumentError, "#{name} must be an integer between #{minimum} and #{maximum}"
       end
 
       value

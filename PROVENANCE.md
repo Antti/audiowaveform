@@ -25,7 +25,7 @@ The core production source, core tests, and initial implementation
 documentation were written for this project. No former core implementation,
 core test helper, legacy recording, or golden output was copied into the new
 core. The old implementation
-was not used as a numerical oracle. Codec media is generated from new numeric
+was not used as a numerical oracle for the initial implementation. Codec media is generated from new numeric
 signals; the recipe, commands, tool version, and hashes are recorded in
 `tests/build_codec_fixtures.py` and the fixture manifests.
 
@@ -81,3 +81,13 @@ The retained Ruby GVL helper was adapted using the installed Ruby C headers,
 and Magnus 0.8.2 public API/source. Array conversion uses Magnus's protected
 append API with a fixed stack buffer of immediate Ruby integers. It does not
 copy the old core's peak conversion or serializers.
+
+## PCM streaming and timing follow-up
+
+After 0.3.0, comparisons against installed 0.2.1/0.3.0 gems and inspection of
+legacy delay handling identified a timing regression. The correction uses
+Symphonia 0.6.1's public gapless decoder option. Regression tests use this
+repository's synthetic tone fixtures and their known source length, with no
+copied legacy golden arrays. Raw PCM conversion/streaming was implemented from
+standard signed PCM scaling, IEEE float encodings, and Rust byte-conversion APIs;
+no legacy raw-input implementation was used or copied.

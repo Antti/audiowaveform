@@ -39,13 +39,43 @@ second. `ChannelMode` supports an arithmetic mono mix and separate channels.
 Every result retains the actual decoded frame count for duration, including
 the final partial bucket in fixed-resolution mode.
 
+## Raw PCM streams
+
+`generate_pcm(reader, format, sample_rate, channels, options)` accepts any Rust
+`Read`, including pipes, without seeking. For caller-managed reads,
+`PcmStream::new(...)`, `push(bytes)`, and `finish()` provide the same accumulator.
+PCM streaming is available even with `--no-default-features`.
+
+`PcmFormat` supports `u8`, `s8`, signed 16/24/32-bit integers and 32/64-bit
+floats, with explicit little/big endian variants (`s16le`, `f32be`, etc.).
+Samples must be interleaved. Rate and source channel count are required; channel
+count fits `u16`. Stream resolution is frames per point or points per second;
+exact `Points` is rejected before reading. Mono/split channels and both gain
+modes are supported. A final partial bucket is included; incomplete samples or
+channel frames at EOF are errors. Nonfinite float samples are errors.
+
+Working buffers are reused and bounded by channel count, independently of input
+length. Retained output still grows with the number of buckets. Cancellation
+variants check between reads and processing batches; a Rust `Read` implementation
+must itself arrange interruptible blocking I/O. Ruby IO reads remain interruptible
+by Ruby and never run inside an unprotected native callback. See the
+[Ruby streaming example](bindings/ruby/README.md#raw-pcm-streams).
+
 ## Memory and cancellation
 
-Fixed resolution decodes once. Exact point counts count decoded frames and
-replay the same open file, without trusting duration estimates. Empty audio
-does not allocate the requested point count. Keep input files unchanged during
-generation; replay mismatches in frame count, track, rate, or channel count
-are errors.
+Fixed resolution decodes once. Exact point counts also decode once for PCM/float
+WAV and native FLAC with an exact header frame count. The count and signal
+metadata are checked against the actual decoded audio. Missing/unsupported
+metadata uses a counting pass and replay of the same open file. If a header
+count disagrees, provisional peaks are discarded and the completed first pass
+supplies the actual count for replay: at most two decoding passes. Decoder
+errors, checksum failures, and truncation remain errors.
+
+This optimization never uses duration estimates and preserves the same peak
+boundaries and values. AAC/M4A, MP3, Ogg/WebM and other formats still use the
+two-pass path for exact points. Empty audio does not allocate the requested
+point count. Keep input files unchanged during generation; replay mismatches
+in frame count, track, rate, or channel count are errors.
 
 A decoded-block scratch buffer and channel extrema are reused. Exact output
 capacity is reserved once. Fixed-resolution output grows geometrically as
@@ -72,8 +102,10 @@ audio formats/codecs. Symphonia is the only direct runtime dependency.
 
 AAC-LC decoding targets mono/stereo. Multichannel AAC, HE-AAC, Opus, and Wave64
 are outside this revision. Codec availability is separate from container
-recognition. Decoder gapless trimming is disabled: duration describes decoded
-frames and may include encoder delay/padding.
+recognition. Decoder gapless trimming is enabled, removing delay/padding where
+Symphonia supplies it (including MP3 and Vorbis priming). Duration counts the
+frames actually delivered after trimming. AAC/MP4 edit-list trimming is still
+limited by the decoder, so AAC duration can differ from playback.
 
 Track selection uses explicit default-audio flags exposed by Symphonia, then
 the first reported audio track. Unsupported selected audio is an error.

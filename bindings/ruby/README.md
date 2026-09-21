@@ -26,9 +26,14 @@ waveform.duration            # actual decoded seconds
 | `amplitude_scale:` | `nil` uses gain 1; a finite nonnegative real Numeric applies gain; `:auto` or `"auto"` normalizes globally. |
 
 At most one resolution option may be non-nil. Each resolution is an Integer no
-larger than 4,294,967,295. Exact counts use two decoding passes on the same open
-file and do not require duration metadata. Keep the file unchanged during the
-operation. Regular seekable files are supported; streams and URLs are not.
+larger than 4,294,967,295. Exact counts use one decoding pass for PCM/float WAV
+and native FLAC with an exact header frame count; the decoded count is verified.
+Other inputs use two passes on the same open file without requiring duration
+metadata. A mismatched header count discards provisional peaks and replays once
+using the count from that first pass. Decoding/corruption errors still fail.
+Results are unchanged, and no new keyword is required. Keep the file unchanged
+during the operation. This method accepts regular seekable files. Use `generate_pcm` below
+for raw PCM streams. Neither method fetches URLs.
 
 Decoding releases Ruby's GVL. Ruby interrupts request cooperative cancellation
 between decoder packets and processing batches. A blocked filesystem/decoder
@@ -38,6 +43,61 @@ Working audio storage is bounded by decoder blocks; output memory scales with
 point count and channels. Every `data` call allocates its returned Ruby array,
 without copying peaks into an intermediate Rust vector. Native allocations are
 reported to Ruby's GC. Large array conversions periodically process interrupts.
+
+## Raw PCM streams
+
+`generate_pcm` reads an `IO`, `StringIO`, or object implementing
+`read(length, outbuf)` from its current position to EOF. It never seeks or closes
+the input. This API is available after 0.3.0.
+
+```ruby
+require "audiowaveform"
+require "open3"
+
+rate = 48_000
+# duration_seconds comes from the integrating application's known duration.
+bucket = [(duration_seconds * rate / 110).ceil, 2].max
+command = ["ffmpeg", "-nostdin", "-v", "error", "-i", "surround.m4a",
+  "-map", "0:a:0", "-vn", "-ac", "1", "-ar", rate.to_s,
+  "-acodec", "pcm_s16le", "-f", "s16le", "pipe:1"]
+
+waveform = Open3.popen2(*command) do |stdin, stdout, process|
+  stdin.close
+  stdout.binmode
+  result = AudioWaveform.generate_pcm(stdout,
+    format: :s16le, sample_rate: rate, channels: 1,
+    samples_per_pixel: bucket)
+  raise "FFmpeg failed" unless process.value.success?
+  result
+end
+peaks = waveform.data(bits: 8)
+```
+
+This consumes FFmpeg's mono PCM directly in one pass; it does not create a WAV
+or buffer the whole recording. The gem does not launch or depend on FFmpeg.
+The caller owns the subprocess and must check its exit status: EOF alone cannot
+distinguish a failed producer from a legitimately short recording.
+
+Required keywords are `format:`, `sample_rate:` (positive Integer up to
+4,294,967,295), and `channels:` (source channels, Integer 1–65,535). Supported
+format names, as Symbols or Strings, are `u8`, `s8`, `s16le`, `s16be`, `s24le`,
+`s24be`, `s32le`, `s32be`, `f32le`, `f32be`, `f64le`, and `f64be`. Input is
+headerless, interleaved PCM in exactly that format; no format is inferred.
+
+`samples_per_pixel:` defaults to 256 and counts frames, with a minimum of 2.
+`split_channels:` and `amplitude_scale:` work as for files. `points:` and
+`pixels_per_second:` are not accepted by this Ruby API. The output count is
+`ceil(actual_frames / samples_per_pixel)`, including the last partial bucket.
+The actual frame count determines duration. An estimated duration can therefore
+produce slightly more or fewer than 110 points.
+
+Reads reuse a 32 KiB Ruby buffer and a native copy for thread safety. Decoded
+scratch space is fixed by channel count; only the output peaks grow with bucket
+count. Native aggregation releases the GVL. Standard Ruby IO blocking reads
+support normal Ruby interrupts; custom readers must provide their own blocking
+behavior. Read exceptions propagate unchanged and native resources are released
+on failure, cancellation, or Ruby `throw`. Incomplete samples/channel frames
+at EOF and nonfinite float samples raise `AudioWaveform::Error`.
 
 ## Waveform
 
@@ -61,8 +121,11 @@ file-writing methods, renderer, or CLI.
 The extension enables the core's `all-formats`: supported WAV, FLAC, Ogg,
 AAC/M4A, ALAC, MP1/MP2/MP3, AIFF, CAF, and Matroska/WebM audio codecs. Container
 recognition does not imply every codec is supported. Multichannel AAC, HE-AAC,
-Opus, and Wave64 are unsupported. AAC padding/delay is not trimmed, so decoded
-duration can differ from playback. See the root README for track-selection limits.
+Opus, and Wave64 are unsupported by file decoding; a caller-managed decoder can
+feed their PCM into `generate_pcm`. Decoder gapless trimming removes reported
+delay/padding, including MP3 and Vorbis priming. AAC/MP4 trimming remains limited
+by Symphonia, so decoded duration can differ from playback. See the root README
+for track-selection limits.
 
 Version 0.3 removes exports and tightens argument coercion. PCM quantization and
 fixed-resolution duration also change; do not expect byte-identical 0.2 peaks.
