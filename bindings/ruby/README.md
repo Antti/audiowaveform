@@ -123,9 +123,13 @@ AAC/M4A, ALAC, MP1/MP2/MP3, AIFF, CAF, and Matroska/WebM audio codecs. Container
 recognition does not imply every codec is supported. Multichannel AAC, HE-AAC,
 Opus, and Wave64 are unsupported by file decoding; a caller-managed decoder can
 feed their PCM into `generate_pcm`. Decoder gapless trimming removes reported
-delay/padding, including MP3 and Vorbis priming. AAC/MP4 trimming remains limited
-by Symphonia, so decoded duration can differ from playback. See the root README
-for track-selection limits.
+delay/padding, including MP3 and Vorbis priming. Nonfragmented AAC/MP4 also trims
+to the selected track's single, normal-speed edit and sample timing range in
+both passes, preserving intentional silence. Coarse edit timescales may round
+duration slightly. Fragmented MP4 and iTunSMPB-only delay metadata remain
+unsupported for gapless trimming. Multiple/empty edits or non-unit playback
+rates raise `AudioWaveform::Error`; use external decoding and `generate_pcm`
+for those inputs. See the root README for track-selection limits.
 
 Version 0.3 removes exports and tightens argument coercion. PCM quantization and
 fixed-resolution duration also change; do not expect byte-identical 0.2 peaks.

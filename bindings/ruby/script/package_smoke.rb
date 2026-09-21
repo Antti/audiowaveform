@@ -76,6 +76,8 @@ module PackageSmoke
         abort "PCM stream failed" unless waveform.data == [-300, 400, -500, 600, 7, 7] && !pcm.closed?
         mp3 = AudioWaveform.generate(File.join(codec_root, "audio.mp3"), points: 110)
         abort "MP3 delay/padding retained" unless mp3.duration == 0.25 && mp3.point(0).first < -8000
+        aac = AudioWaveform.generate(File.join(repository, "tests/fixtures/aac/short-44100.m4a"), points: 110)
+        abort "AAC delay/padding retained" unless aac.duration == 0.05 && aac.length == 110
         puts "Installed #{Gem.loaded_specs.fetch('audiowaveform').full_name}: 36 vectors and codec matrix passed on Ruby #{RUBY_VERSION}"
       CODE
     end

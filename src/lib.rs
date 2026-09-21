@@ -17,6 +17,7 @@ mod decode;
 mod error;
 #[cfg(feature = "mkv")]
 mod matroska;
+mod mp4;
 mod options;
 mod pcm;
 mod reduce;

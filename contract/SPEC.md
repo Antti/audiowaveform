@@ -1,6 +1,6 @@
-# Audio peak generation contract, revision 2
+# Audio peak generation contract, revision 3
 
-Updated for Ruby 0.4.0 with gapless trimming, raw PCM, and exact-count metadata. Normative
+Updated after Ruby 0.4.0 with AAC/MP4 playback trimming. Normative
 requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
@@ -29,11 +29,19 @@ Codec availability is distinct from container recognition. Multichannel AAC,
 HE-AAC, Opus, and Wave64 are not required for the first replacement.
 
 Enable decoder-provided gapless trimming. `N` counts frames actually delivered
-by the decoder after trimming; count and aggregation passes use identical
+after trimming; count and aggregation passes use identical
 settings. Do not manually subtract delay a second time. MP3 delay/padding and
 Vorbis priming must not create extra leading buckets. Available trimming depends
-on the codec/container metadata exposed by Symphonia; AAC/MP4 edit-list handling
-remains a documented limitation. Raw PCM receives no automatic trimming.
+on the codec/container metadata exposed by Symphonia, with this additional rule:
+nonfragmented AAC/MP4 uses the selected track's media timescale, time-to-sample
+table, and optional single unit-rate edit. Decode all packets, including priming,
+but retain only frames whose timestamps lie in that half-open playback range,
+capped at the sample table's end. Apply the same range in each pass. Never infer
+delay from silence or a fixed encoder-specific constant. Missing edits mean no
+assumed leading delay; movie-timescale rounding remains part of the metadata.
+Reject complex edits (multiple, empty, dwell, or non-unit rate) and inconsistent
+packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
+metadata is not interpreted. Raw PCM receives no automatic trimming.
 
 ## 2. Ruby generation API
 

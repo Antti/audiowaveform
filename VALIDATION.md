@@ -199,3 +199,32 @@ The Ruby 0.4.0 version bump passes 72 Ruby tests / 1,393 assertions and RBS
 validation. The built `audiowaveform-0.4.0.gem` installs into an isolated gem
 directory and passes the contract vectors, codec matrix, PCM streaming, and
 MP3 gapless checks. Both unpublished Rust packages remain at 0.1.0.
+
+## AAC/MP4 playback trimming (unreleased)
+
+Local all-feature, no-default-feature, and M4A-only Rust tests pass, along with
+formatting and strict all-target Clippy for both workspaces. Seven parser tests
+cover edit-list/header versions 0/1, different movie/media/sample clocks, selected
+track IDs, partial packet boundaries, malformed/truncated atoms and timing
+tables, unsupported edits, overflow, cancellation, and shared-file cursor
+restoration. Six integration tests decode newly generated AAC fixtures and
+compare peaks with independent batch arithmetic over the known playback slice.
+
+The 44.1 kHz 50 ms fixture decodes to 4,096 raw frames but retains exactly 2,205
+frames and 110 points. Other cases cover 32/48 kHz, one-frame and odd-length
+clips, mono/stereo, fixed/normalized gain, direct 8-bit output, true silence and
+silent edges, changed edit offsets (including 2,112), empty playback, absent
+edits, coarse movie-clock rounding, video before multiple audio tracks,
+impossible sample-table lengths, and the documented fragmented-MP4 fallback.
+Exact points and fixed-size buckets both use the same trimmed frame range.
+
+The metadata reader uses fixed-size stack buffers and seeks past media; it
+retains neither packet tables nor decoded audio. A manual comparison of 50 ms
+and 30-second mono AAC at 44.1 kHz, each producing 110 points, reports identical
+application capacities: 8,192 bytes of sample scratch and 456 bytes of
+peak/current storage. Decoder/container allocations are outside these figures.
+
+Ruby 4.0.5 passes 73 tests / 1,533 assertions and RBS validation. An isolated
+source-gem installation passes the numeric/codec/PCM checks plus an AAC check
+requiring a 50 ms duration and 110 points. This is a local development build of
+the unchanged 0.4.0 package version, not a published release.

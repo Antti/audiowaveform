@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""Owned synthetic AAC timing fixtures. FFmpeg is only a development tool."""
+import hashlib
+import json
+import math
+from pathlib import Path
+import struct
+import subprocess
+import tempfile
+import wave
+
+ROOT = Path(__file__).resolve().parent / "fixtures" / "aac"
+ROOT.mkdir(parents=True, exist_ok=True)
+cases, commands = [], []
+
+with tempfile.TemporaryDirectory() as temporary:
+    source = Path(temporary) / "source.wav"
+
+    def encode(name, rate, frames, channels=1, signal="tone", extra=()):
+        samples = []
+        for i in range(frames):
+            audible = signal != "silence" and (signal != "edges" or frames // 3 <= i < 2 * frames // 3)
+            samples.extend(int(12000 * math.sin(2 * math.pi * hz * i / rate)) if audible else 0
+                           for hz in (440, 880)[:channels])
+        with wave.open(str(source), "wb") as out:
+            out.setparams((channels, 2, rate, frames, "NONE", "not compressed"))
+            out.writeframes(struct.pack("<" + "h" * len(samples), *samples))
+        command = ["ffmpeg", "-v", "error", "-y", "-i", str(source), "-c:a", "aac",
+                   "-movie_timescale", str(rate), *extra, str(ROOT / name)]
+        subprocess.run(command, check=True)
+        commands.append([part.replace(str(source), "$SOURCE").replace(str(ROOT), "$FIXTURES") for part in command])
+        cases.append(dict(file=name, rate=rate, frames=frames, channels=channels, signal=signal))
+
+    encode("short-44100.m4a", 44100, 2205)
+    encode("short-48000.m4a", 48000, 2400)
+    encode("short-32000.m4a", 32000, 1600)
+    encode("odd.m4a", 44100, 2206)
+    encode("one.m4a", 44100, 1)
+    encode("silence.m4a", 44100, 2205, signal="silence")
+    encode("silent-edges.m4a", 48000, 12000, channels=2, signal="edges")
+    encode("coarse-movie-clock.m4a", 44100, 2206, extra=("-movie_timescale", "1000"))
+    # FFmpeg rounds this edit down to 50 movie ticks = 2,205 playback frames.
+    cases[-1]["playback_frames"] = 2205
+    encode("fragmented.m4a", 44100, 2205, extra=("-movflags", "empty_moov+frag_keyframe"))
+    cases[-1]["fragmented"] = True
+
+    # Video precedes two AAC tracks with distinct ranges. The first audio track
+    # has a short tone, the second is longer and has silent edges.
+    command = ["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=black:s=16x16:r=20:d=0.05",
+               "-i", str(ROOT / "short-44100.m4a"), "-i", str(ROOT / "silent-edges.m4a"),
+               "-map", "0:v", "-map", "1:a", "-map", "2:a", "-c:v", "mpeg4", "-c:a", "copy",
+               "-movie_timescale", "44100", str(ROOT / "tracks.mp4")]
+    subprocess.run(command, check=True)
+    commands.append([part.replace(str(ROOT), "$FIXTURES") for part in command])
+
+manifest = dict(
+    provenance="New arithmetic sine/silence signals encoded with FFmpeg; no legacy fixtures or waveform output used.",
+    recipe="Signed 16-bit sine: int(12000*sin(2*pi*frequency*frame/rate)); mono 440 Hz, stereo 440/880 Hz. Edges silence first/last thirds.",
+    ffmpeg=subprocess.check_output(["ffmpeg", "-version"], text=True).splitlines()[0],
+    commands=commands, cases=cases,
+    sha256={path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(ROOT.glob("*.m4a"))}
+)
+manifest["sha256"]["tracks.mp4"] = hashlib.sha256((ROOT / "tracks.mp4").read_bytes()).hexdigest()
+(ROOT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

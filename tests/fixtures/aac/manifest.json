@@ -1,0 +1,234 @@
+{
+  "provenance": "New arithmetic sine/silence signals encoded with FFmpeg; no legacy fixtures or waveform output used.",
+  "recipe": "Signed 16-bit sine: int(12000*sin(2*pi*frequency*frame/rate)); mono 440 Hz, stereo 440/880 Hz. Edges silence first/last thirds.",
+  "ffmpeg": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "commands": [
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/short-44100.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "48000",
+      "$FIXTURES/short-48000.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "32000",
+      "$FIXTURES/short-32000.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/odd.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/one.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/silence.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "48000",
+      "$FIXTURES/silent-edges.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "-movie_timescale",
+      "1000",
+      "$FIXTURES/coarse-movie-clock.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-i",
+      "$SOURCE",
+      "-c:a",
+      "aac",
+      "-movie_timescale",
+      "44100",
+      "-movflags",
+      "empty_moov+frag_keyframe",
+      "$FIXTURES/fragmented.m4a"
+    ],
+    [
+      "ffmpeg",
+      "-v",
+      "error",
+      "-y",
+      "-f",
+      "lavfi",
+      "-i",
+      "color=black:s=16x16:r=20:d=0.05",
+      "-i",
+      "$FIXTURES/short-44100.m4a",
+      "-i",
+      "$FIXTURES/silent-edges.m4a",
+      "-map",
+      "0:v",
+      "-map",
+      "1:a",
+      "-map",
+      "2:a",
+      "-c:v",
+      "mpeg4",
+      "-c:a",
+      "copy",
+      "-movie_timescale",
+      "44100",
+      "$FIXTURES/tracks.mp4"
+    ]
+  ],
+  "cases": [
+    {
+      "file": "short-44100.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "short-48000.m4a",
+      "rate": 48000,
+      "frames": 2400,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "short-32000.m4a",
+      "rate": 32000,
+      "frames": 1600,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "odd.m4a",
+      "rate": 44100,
+      "frames": 2206,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "one.m4a",
+      "rate": 44100,
+      "frames": 1,
+      "channels": 1,
+      "signal": "tone"
+    },
+    {
+      "file": "silence.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "silence"
+    },
+    {
+      "file": "silent-edges.m4a",
+      "rate": 48000,
+      "frames": 12000,
+      "channels": 2,
+      "signal": "edges"
+    },
+    {
+      "file": "coarse-movie-clock.m4a",
+      "rate": 44100,
+      "frames": 2206,
+      "channels": 1,
+      "signal": "tone",
+      "playback_frames": 2205
+    },
+    {
+      "file": "fragmented.m4a",
+      "rate": 44100,
+      "frames": 2205,
+      "channels": 1,
+      "signal": "tone",
+      "fragmented": true
+    }
+  ],
+  "sha256": {
+    "coarse-movie-clock.m4a": "ed859c61f91d14705d2af4c7fc45115922fc0e059041e439d3c2941cc1f6d3cf",
+    "fragmented.m4a": "1daf4b0b58d3bb0a093603c591c90d49e59b61aeb17e482c5c9170440fdc76df",
+    "odd.m4a": "91848ab432a0efc0d3d3898b69fa63b1098556bb769ad828f5ce65ef3ffcdc7b",
+    "one.m4a": "46b8c5115416dd7b9eefbd4360a4109ec961c3a082ddfe101fa93c7ab57be3ad",
+    "short-32000.m4a": "9d6bc68de9733c91f217b22eae062683cf46bbefd9f7f07c1ae26a00453a5af5",
+    "short-44100.m4a": "9c192436067b8426974122e3d38fdcce804749c0d97efdcfdde80047faf34039",
+    "short-48000.m4a": "44c81e3bfc90b5f27c18eb71961730dcf258e13340fe7f8a06507f279badde25",
+    "silence.m4a": "26b1e4cfb80dbadef7d8aa3db1a6814c42def17535c52b4967b6b5f6ecd9cc53",
+    "silent-edges.m4a": "65c9de3f11a3718d8e9d6d14eb15eec6ec9ffffa5c91087e3a0aa8fc2289d0ec",
+    "tracks.mp4": "eae4f634572a19b11b9fe8347875aff48b1b7b28c993bf742bfaa50104c62cbf"
+  }
+}

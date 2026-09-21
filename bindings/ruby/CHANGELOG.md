@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Trim AAC/MP4 priming and padding from the selected track's edit list and
+  sample timing before counting frames or generating peaks. A 50 ms clip now
+  produces a 50 ms waveform with either exact points or fixed-size buckets.
+  Keep streaming buffers and genuine silence; do not guess encoder delay.
+- Support one contiguous, normal-speed edit in nonfragmented MP4. Complex
+  edits return an error; fragmented MP4 and iTunSMPB-only gapless metadata
+  remain outside this support.
+
 ## 0.4.0 (2026-09-21)
 
 - Generate exact `points:` in one decoding pass for PCM/float WAV and native
