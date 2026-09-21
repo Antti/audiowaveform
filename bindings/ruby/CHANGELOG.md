@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Generate exact `points:` for nonfragmented AAC/MP4 in one decoding pass using
+  parsed playback bounds and the decoder's resolved signal parameters. Verify
+  the actual count before returning peaks; rounded endpoints that overstate it
+  replay with the observed count. Fragmented MP4 and raw ADTS retain two passes.
 - Trim AAC/MP4 priming and padding from the selected track's edit list and
   sample timing before counting frames or generating peaks. A 50 ms clip now
   produces a 50 ms waveform with either exact points or fixed-size buckets.

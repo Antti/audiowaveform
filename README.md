@@ -64,17 +64,18 @@ by Ruby and never run inside an unprotected native callback. See the
 ## Memory and cancellation
 
 Fixed resolution decodes once. Exact point counts also decode once for PCM/float
-WAV and native FLAC with an exact header frame count. The count and signal
-metadata are checked against the actual decoded audio. Missing/unsupported
-metadata uses a counting pass and replay of the same open file. If a header
-count disagrees, provisional peaks are discarded and the completed first pass
-supplies the actual count for replay: at most two decoding passes. Decoder
-errors, checksum failures, and truncation remain errors.
+WAV and native FLAC with an exact header frame count, and for nonfragmented
+AAC/MP4 with parsed playback bounds. The count and signal metadata are checked
+against the actual playback frames. Missing/unsupported metadata uses a counting
+pass and replay of the same open file. If a count disagrees (including an AAC
+media end rounded past decoded EOF), provisional peaks are discarded and the
+completed first pass supplies the actual count for replay: at most two decoding
+passes. Decoder errors, checksum failures, and truncation remain errors.
 
-This optimization never uses duration estimates and preserves the same peak
-boundaries and values. AAC/M4A, MP3, Ogg/WebM and other formats still use the
-two-pass path for exact points. Empty audio does not allocate the requested
-point count. Keep input files unchanged during generation; replay mismatches
+This optimization preserves the same peak boundaries and values. Raw ADTS AAC,
+fragmented MP4, MP3, Ogg/WebM and other formats still use the two-pass path for
+exact points. Empty audio does not allocate the requested point count. Keep
+input files unchanged during generation; replay mismatches
 in frame count, track, rate, or channel count are errors.
 
 A decoded-block scratch buffer and channel extrema are reused. Exact output

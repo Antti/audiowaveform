@@ -104,7 +104,7 @@ fn reduce_points(
     cancelled: &mut impl FnMut() -> bool,
 ) -> Result<(Reducer, u8), Error> {
     let mut provisional = session
-        .exact_frame_count()
+        .frame_count_hint()
         .map(|expected| ProvisionalPoints {
             expected,
             reducer: None,
@@ -308,11 +308,23 @@ impl Session {
         })
     }
 
-    /// Only native FLAC STREAMINFO and WAV PCM data extents have been audited
-    /// as exact frame counts here. Container durations, ADPCM block counts,
-    /// and counts affected by lossy codec delay/padding are not trusted.
-    /// Even these hints are checked against all frames actually decoded.
-    fn exact_frame_count(&self) -> Option<Scan> {
+    /// Audited counts from WAV PCM extents, native FLAC STREAMINFO, or parsed
+    /// AAC/MP4 playback bounds. Every hint is checked against actual playback
+    /// frames before returning peaks; other container durations are not used.
+    fn frame_count_hint(&self) -> Option<Scan> {
+        if let Some(playback) = self.playback {
+            // Use the decoder's resolved channel layout, just as playback
+            // bounds use its sample rate instead of the container entry's.
+            let channels = self.decoder.codec_params().channels.as_ref()?.count();
+            return (channels > 0).then_some(Scan {
+                signal: Signal {
+                    rate: playback.rate,
+                    channels,
+                },
+                frames: playback.frame_count(),
+                track: self.track,
+            });
+        }
         let track = self
             .format
             .tracks()

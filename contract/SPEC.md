@@ -50,6 +50,14 @@ Reject multiple media edits, empty edits after media, dwell/non-unit rates, and
 inconsistent packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
 metadata is not interpreted. Raw PCM receives no automatic trimming.
 
+For exact points, use parsed nonfragmented AAC/MP4 bounds to generate provisional
+peaks in one pass with `N = end - start + leading_frames`. Use the initialized
+decoder's sample rate and channel layout. Verify the observed playback count
+before returning those peaks. If a rounded endpoint overstates the count,
+discard provisional peaks and replay using the observed count; retain all
+decoding and timing checks, including after the playback range ends. Fragmented
+MP4 and raw ADTS AAC keep the two-pass path.
+
 ## 2. Ruby generation API
 
 ```ruby

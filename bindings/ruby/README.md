@@ -27,10 +27,12 @@ waveform.duration            # actual decoded seconds
 
 At most one resolution option may be non-nil. Each resolution is an Integer no
 larger than 4,294,967,295. Exact counts use one decoding pass for PCM/float WAV
-and native FLAC with an exact header frame count; the decoded count is verified.
-Other inputs use two passes on the same open file without requiring duration
-metadata. A mismatched header count discards provisional peaks and replays once
-using the count from that first pass. Decoding/corruption errors still fail.
+and native FLAC with an exact header frame count, and nonfragmented AAC/MP4
+with parsed playback bounds. The actual playback count is verified. Other inputs
+use two passes on the same open file without requiring duration metadata.
+A mismatched count, including AAC timestamp rounding beyond decoded EOF,
+discards provisional peaks and replays once using the count from that first
+pass. Decoding/corruption errors still fail.
 Results are unchanged, and no new keyword is required. Keep the file unchanged
 during the operation. This method accepts regular seekable files. Use `generate_pcm` below
 for raw PCM streams. Neither method fetches URLs.

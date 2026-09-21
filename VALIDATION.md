@@ -207,7 +207,7 @@ formatting and strict all-target Clippy for both workspaces. Ten parser tests
 cover edit-list/header versions 0/1, different movie/media/sample clocks, selected
 track IDs, partial packet boundaries, malformed/truncated atoms and timing
 tables, unsupported edits, overflow, cancellation, and shared-file cursor
-restoration. Eight integration tests decode newly generated AAC fixtures and
+restoration. Nine integration tests decode newly generated AAC fixtures and
 compare peaks with independent batch arithmetic over the known playback slice.
 
 The 44.1 kHz 50 ms fixture decodes to 4,096 raw frames but retains exactly 2,205
@@ -249,3 +249,33 @@ AudioSpecificConfig, which can differ from the container sample-entry rate.
 The 88.2 and 96 kHz fixtures failed with `AAC/MP4 sample rate changed` before
 this correction. They now retain exactly 4,410 and 4,800 frames, respectively,
 with peaks checked in both resolution modes and installed-gem coverage.
+
+Exact points now use those parsed bounds as a verified frame-count hint. The
+AAC fixture matrix checks one decoding pass, including 88.2/96 kHz, leading
+gaps, empty playback, and selected tracks following video, with unchanged peaks.
+The rounded-media-end fixture predicts 4,102 frames but actually supplies 4,096;
+it still uses two passes and matches the independent oracle with fixed and
+normalized gain. Fragmented MP4 also retains two passes. A truncated final AAC
+packet fails even when all requested playback frames (or an empty range) were
+already delivered. Existing buffer-capacity and cancellation checks still pass.
+
+Release-build comparison against `193f789` on an arm64 Mac, 48 kHz AAC at
+128 kbit/s and 110 exact points, with warm caches and alternating before/after
+processes. Values are median library wall times from five paired trials (three
+for 30 minutes), excluding a warmup generation in each process:
+
+| Input | Two passes | Verified one pass |
+| --- | ---: | ---: |
+| 50 ms mono | 0.419 ms | 0.209 ms |
+| 30 seconds mono | 28.69 ms | 17.79 ms |
+| 5 minutes mono | 309.93 ms | 173.28 ms |
+| 30 minutes mono | 1,741.00 ms | 1,069.14 ms |
+| 5 minutes stereo, mixed to mono | 413.75 ms | 242.39 ms |
+| 5 minutes mono, normalized | 283.62 ms | 173.16 ms |
+
+Longer inputs took 38–44% less time in these local measurements. Fixed buckets
+remain one-pass and measured 176.43 vs. 174.75 ms for five minutes. Mono scratch
+and peak/current capacities remain 8,192 and 456 bytes; normalized peaks use
+2,216 bytes and stereo scratch uses 16,384 bytes. Maximum measured process RSS
+was about 3.9 MiB. These timings are host-specific, not isolated-system results
+or a constant-memory guarantee for decoder/container internals.

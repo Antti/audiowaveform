@@ -28,6 +28,14 @@ pub(crate) struct Playback {
 }
 
 impl Playback {
+    /// Expected playback length, verified against actual frames at EOF. A
+    /// rounded media end can overstate this count and require peak generation
+    /// to replay using the smaller observed count.
+    pub fn frame_count(self) -> u64 {
+        // Parsing already checked the ordering and this sum for overflow.
+        self.end - self.start + self.leading_frames
+    }
+
     pub fn slice(self, position: u64, frames: usize, pts: i64) -> Result<Range<usize>, Error> {
         let timestamp = u64::try_from(pts).map_err(|_| INVALID)?;
         // Packet boundaries may be rounded to media-clock ticks. Compare each

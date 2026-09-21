@@ -133,11 +133,16 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
                     assert_eq!(waveform.duration(), frames as f64 / f64::from(rate));
                     assert_eq!(
                         waveform.statistics().decode_passes,
-                        if matches!(resolution, Resolution::Points(_)) {
+                        // 93 media ticks predict 4,102 frames, but this file
+                        // decodes only 4,096: exact points must replay at EOF.
+                        if matches!(resolution, Resolution::Points(_))
+                            && name == "rounded-media-end.m4a"
+                        {
                             2
                         } else {
                             1
-                        }
+                        },
+                        "{name} {options:?}"
                     );
                     let peaks = expected(&audible, channels, options);
                     assert_eq!(waveform.data16(), peaks, "{name} {options:?}");
@@ -195,6 +200,7 @@ fn edit_start_is_not_a_hardcoded_encoder_delay() {
             };
             let waveform = generate(file.path(), options).unwrap();
             assert_eq!(waveform.source_frames(), u64::from(frames));
+            assert_eq!(waveform.statistics().decode_passes, 1);
             if frames == 0 {
                 assert!(waveform.data16().is_empty());
             } else {
@@ -224,6 +230,7 @@ fn missing_edit_does_not_guess_leading_delay_but_honors_sample_table_end() {
     };
     let waveform = generate(file.path(), options).unwrap();
     assert_eq!(waveform.source_frames(), 3229);
+    assert_eq!(waveform.statistics().decode_passes, 1);
     assert_eq!(
         waveform.data16(),
         expected(&raw(file.path())[..3229], 1, options)
@@ -239,6 +246,7 @@ fn selected_audio_track_is_trimmed_after_video() {
     let single = generate(fixture("short-44100.m4a"), options).unwrap();
     let tracks = generate(fixture("tracks.mp4"), options).unwrap();
     assert_eq!(tracks.source_frames(), 2205);
+    assert_eq!(tracks.statistics().decode_passes, 1);
     assert_eq!(tracks.data16(), single.data16());
 }
 
@@ -251,6 +259,7 @@ fn fragmented_mp4_keeps_the_decoder_timeline() {
     let path = fixture("fragmented.m4a");
     let decoded = raw(&path);
     let waveform = generate(&path, options).unwrap();
+    assert_eq!(waveform.statistics().decode_passes, 2);
     assert_eq!(waveform.source_frames(), decoded.len() as u64);
     assert_eq!(waveform.data16(), expected(&decoded, 1, options));
 }
@@ -278,6 +287,49 @@ fn impossible_sample_table_end_is_an_error_in_both_modes() {
             )
             .is_err()
         );
+    }
+}
+
+#[test]
+fn completing_the_playback_range_does_not_skip_later_decode_errors() {
+    let original = std::fs::read(fixture("short-44100.m4a")).unwrap();
+    let edit = atom(&original, &[*b"moov", *b"trak", *b"edts", *b"elst"]);
+    let sizes = atom(
+        &original,
+        &[*b"moov", *b"trak", *b"mdia", *b"minf", *b"stbl", *b"stsz"],
+    );
+    let packets = u32::from_be_bytes(original[sizes + 8..sizes + 12].try_into().unwrap());
+    let last_size = sizes + 12 + (packets as usize - 1) * 4;
+    let last_packet = atom(&original, &[*b"mdat"])
+        + original[sizes + 12..last_size]
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|size| u32::from_be_bytes(*size) as usize)
+            .sum::<usize>();
+    for frames in [0_u32, 1] {
+        let mut bytes = original.clone();
+        bytes[edit + 8..edit + 12].copy_from_slice(&frames.to_be_bytes());
+        bytes[edit + 12..edit + 16].copy_from_slice(&0_u32.to_be_bytes());
+        // Leave the file and timing tables intact but truncate the final AAC
+        // packet, after every requested playback frame was delivered.
+        bytes[last_size..last_size + 4].copy_from_slice(&1_u32.to_be_bytes());
+        bytes[last_packet] = 0; // incomplete single-channel element
+        let file = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(file.path(), bytes).unwrap();
+        for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(23)] {
+            let result = generate(
+                file.path(),
+                Options {
+                    resolution,
+                    ..Options::default()
+                },
+            );
+            assert!(
+                matches!(result, Err(waveform_core::Error::Decode(_))),
+                "{result:?}"
+            );
+        }
     }
 }
 

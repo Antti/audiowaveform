@@ -47,7 +47,7 @@ fn synthetic_codec_matrix() {
             assert_eq!(waveform.len(), 110, "{file}");
             assert_eq!(
                 waveform.statistics().decode_passes,
-                if matches!(file, "pcm.wav" | "audio.flac") {
+                if matches!(file, "pcm.wav" | "audio.flac" | "aac.m4a") {
                     1
                 } else {
                     2
