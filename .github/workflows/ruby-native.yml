@@ -2,7 +2,7 @@ name: Ruby Native Gems
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
     paths:
       - ".github/workflows/ruby-native.yml"
   pull_request:
