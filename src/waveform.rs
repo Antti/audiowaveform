@@ -41,6 +41,10 @@ impl Waveform {
     pub fn frames_per_point(&self) -> u64 {
         self.frames_per_point
     }
+    /// Heap bytes retained by the waveform, excluding the inline struct.
+    pub fn allocated_bytes(&self) -> usize {
+        self.data.capacity() * std::mem::size_of::<i16>()
+    }
     pub fn data16(&self) -> &[i16] {
         &self.data
     }

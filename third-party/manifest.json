@@ -1,0 +1,976 @@
+[
+  {
+    "name": "aho-corasick",
+    "version": "1.1.5",
+    "license": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/aho-corasick",
+    "source": "https://crates.io/api/v1/crates/aho-corasick/1.1.5/download",
+    "notices": [
+      {
+        "original": "COPYING",
+        "file": "third-party/01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f.txt",
+        "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f.txt",
+        "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+      },
+      {
+        "original": "UNLICENSE",
+        "file": "third-party/7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c.txt",
+        "sha256": "7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c"
+      }
+    ]
+  },
+  {
+    "name": "autocfg",
+    "version": "1.5.1",
+    "license": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/cuviper/autocfg",
+    "source": "https://crates.io/api/v1/crates/autocfg/1.5.1/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/27995d58ad5c1145c1a8cd86244ce844886958a35eb2b78c6b772748669999ac.txt",
+        "sha256": "27995d58ad5c1145c1a8cd86244ce844886958a35eb2b78c6b772748669999ac"
+      }
+    ]
+  },
+  {
+    "name": "bindgen",
+    "version": "0.72.1",
+    "license": "BSD-3-Clause",
+    "repository": "https://github.com/rust-lang/rust-bindgen",
+    "source": "https://crates.io/api/v1/crates/bindgen/0.72.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c23953d9deb0a3312dbeaf6c128a657f3591acee45067612fa68405eaa4525db.txt",
+        "sha256": "c23953d9deb0a3312dbeaf6c128a657f3591acee45067612fa68405eaa4525db"
+      }
+    ]
+  },
+  {
+    "name": "bitflags",
+    "version": "2.13.2",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/bitflags/bitflags",
+    "source": "https://crates.io/api/v1/crates/bitflags/2.13.2/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "bytemuck",
+    "version": "1.25.2",
+    "license": "Zlib OR Apache-2.0 OR MIT",
+    "repository": "https://github.com/Lokathor/bytemuck",
+    "source": "https://crates.io/api/v1/crates/bytemuck/1.25.2/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb.txt",
+        "sha256": "e3ba223bb1423f0aad8c3dfce0fe3148db48926d41e6fbc3afbbf5ff9e1c89cb"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/9df9ba60a11af705f2e451b53762686e615d86f76b169cf075c3237730dbd7e2.txt",
+        "sha256": "9df9ba60a11af705f2e451b53762686e615d86f76b169cf075c3237730dbd7e2"
+      },
+      {
+        "original": "LICENSE-ZLIB",
+        "file": "third-party/84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151.txt",
+        "sha256": "84b34dd7608f7fb9b17bd588a6bf392bf7de504e2716f024a77d89f1b145a151"
+      }
+    ]
+  },
+  {
+    "name": "cexpr",
+    "version": "0.6.0",
+    "license": "Apache-2.0/MIT",
+    "repository": "https://github.com/jethrogb/rust-cexpr",
+    "source": "https://crates.io/api/v1/crates/cexpr/0.6.0/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/d9771b8c6cf4426d3846de54c1febe20907f1eeadf7adfb5ade89a83bd9ea77f.txt",
+        "sha256": "d9771b8c6cf4426d3846de54c1febe20907f1eeadf7adfb5ade89a83bd9ea77f"
+      }
+    ]
+  },
+  {
+    "name": "cfg-if",
+    "version": "1.0.5",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/cfg-if",
+    "source": "https://crates.io/api/v1/crates/cfg-if/1.0.5/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397.txt",
+        "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397"
+      }
+    ]
+  },
+  {
+    "name": "clang-sys",
+    "version": "1.9.1",
+    "license": "Apache-2.0",
+    "repository": "https://github.com/KyleMayes/clang-sys",
+    "source": "https://crates.io/api/v1/crates/clang-sys/1.9.1/download",
+    "notices": [
+      {
+        "original": "LICENSE.txt",
+        "file": "third-party/cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30.txt",
+        "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      }
+    ]
+  },
+  {
+    "name": "either",
+    "version": "1.18.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rayon-rs/either",
+    "source": "https://crates.io/api/v1/crates/either/1.18.0/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545.txt",
+        "sha256": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+      }
+    ]
+  },
+  {
+    "name": "extended",
+    "version": "0.1.0",
+    "license": "MIT",
+    "repository": "https://github.com/depp/extended-rs",
+    "source": "https://crates.io/api/v1/crates/extended/0.1.0/download",
+    "notices": [
+      {
+        "original": "LICENSE.txt",
+        "file": "third-party/25a0874d15e7c834a47c3adc80901edb2219759254992023ef1010c3065413d5.txt",
+        "sha256": "25a0874d15e7c834a47c3adc80901edb2219759254992023ef1010c3065413d5"
+      }
+    ]
+  },
+  {
+    "name": "glob",
+    "version": "0.3.4",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/glob",
+    "source": "https://crates.io/api/v1/crates/glob/0.3.4/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "itertools",
+    "version": "0.13.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-itertools/itertools",
+    "source": "https://crates.io/api/v1/crates/itertools/0.13.0/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545.txt",
+        "sha256": "7576269ea71f767b99297934c0b2367532690f8c4badc695edf8e04ab6a1e545"
+      }
+    ]
+  },
+  {
+    "name": "lazy_static",
+    "version": "1.5.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang-nursery/lazy-static.rs",
+    "source": "https://crates.io/api/v1/crates/lazy_static/1.5.0/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720.txt",
+        "sha256": "0621878e61f0d0fda054bcbe02df75192c28bde1ecc8289cbd86aeba2dd72720"
+      }
+    ]
+  },
+  {
+    "name": "libc",
+    "version": "0.2.189",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/libc",
+    "source": "https://crates.io/api/v1/crates/libc/0.2.189/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e.txt",
+        "sha256": "123a331b5dbf04c30097fa43b8f858bc85df671fe776de498d01f3d6b7c1f69e"
+      }
+    ]
+  },
+  {
+    "name": "libloading",
+    "version": "0.8.9",
+    "license": "ISC",
+    "repository": "https://github.com/nagisa/rust_libloading/",
+    "source": "https://crates.io/api/v1/crates/libloading/0.8.9/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/b29f8b01452350c20dd1af16ef83b598fea3053578ccc1c7a0ef40e57be2620f.txt",
+        "sha256": "b29f8b01452350c20dd1af16ef83b598fea3053578ccc1c7a0ef40e57be2620f"
+      }
+    ]
+  },
+  {
+    "name": "log",
+    "version": "0.4.34",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/log",
+    "source": "https://crates.io/api/v1/crates/log/0.4.34/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "magnus",
+    "version": "0.8.2",
+    "license": "MIT",
+    "repository": "https://github.com/matsadler/magnus",
+    "source": "https://crates.io/api/v1/crates/magnus/0.8.2/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/79e69d34457af5881b9b7410144cac786098fd86f242a98f419aa8abd1b0578a.txt",
+        "sha256": "79e69d34457af5881b9b7410144cac786098fd86f242a98f419aa8abd1b0578a"
+      }
+    ]
+  },
+  {
+    "name": "magnus-macros",
+    "version": "0.8.0",
+    "license": "MIT",
+    "repository": "https://github.com/matsadler/magnus",
+    "source": "https://crates.io/api/v1/crates/magnus-macros/0.8.0/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/79e69d34457af5881b9b7410144cac786098fd86f242a98f419aa8abd1b0578a.txt",
+        "sha256": "79e69d34457af5881b9b7410144cac786098fd86f242a98f419aa8abd1b0578a"
+      }
+    ]
+  },
+  {
+    "name": "memchr",
+    "version": "2.8.3",
+    "license": "Unlicense OR MIT",
+    "repository": "https://github.com/BurntSushi/memchr",
+    "source": "https://crates.io/api/v1/crates/memchr/2.8.3/download",
+    "notices": [
+      {
+        "original": "COPYING",
+        "file": "third-party/01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f.txt",
+        "sha256": "01c266bced4a434da0051174d6bee16a4c82cf634e2679b6155d40d75012390f"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f.txt",
+        "sha256": "0f96a83840e146e43c0ec96a22ec1f392e0680e6c1226e6f3ba87e0740af850f"
+      },
+      {
+        "original": "UNLICENSE",
+        "file": "third-party/7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c.txt",
+        "sha256": "7e12e5df4bae12cb21581ba157ced20e1986a0508dd10d0e8a4ab9a4cf94e85c"
+      }
+    ]
+  },
+  {
+    "name": "minimal-lexical",
+    "version": "0.2.1",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/Alexhuszagh/minimal-lexical",
+    "source": "https://crates.io/api/v1/crates/minimal-lexical/0.2.1/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90.txt",
+        "sha256": "8173d5c29b4f956d532781d2b86e4e30f83e6b7878dce18c919451d6ba707c90"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      },
+      {
+        "original": "LICENSE.md",
+        "file": "third-party/dbe1fff0fb1314b6af94f161511406275cf01c5a32441fbf24528a57a051d599.txt",
+        "sha256": "dbe1fff0fb1314b6af94f161511406275cf01c5a32441fbf24528a57a051d599"
+      }
+    ]
+  },
+  {
+    "name": "nom",
+    "version": "7.1.3",
+    "license": "MIT",
+    "repository": "https://github.com/Geal/nom",
+    "source": "https://crates.io/api/v1/crates/nom/7.1.3/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/4dbda04344456f09a7a588140455413a9ac59b6b26a1ef7cdf9c800c012d87f0.txt",
+        "sha256": "4dbda04344456f09a7a588140455413a9ac59b6b26a1ef7cdf9c800c012d87f0"
+      }
+    ]
+  },
+  {
+    "name": "num-complex",
+    "version": "0.4.6",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-complex",
+    "source": "https://crates.io/api/v1/crates/num-complex/0.4.6/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "num-traits",
+    "version": "0.2.19",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-num/num-traits",
+    "source": "https://crates.io/api/v1/crates/num-traits/0.2.19/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "proc-macro2",
+    "version": "1.0.107",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/proc-macro2",
+    "source": "https://crates.io/api/v1/crates/proc-macro2/1.0.107/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    ]
+  },
+  {
+    "name": "quote",
+    "version": "1.0.47",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/quote",
+    "source": "https://crates.io/api/v1/crates/quote/1.0.47/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    ]
+  },
+  {
+    "name": "rb-sys",
+    "version": "0.9.130",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/oxidize-rb/rb-sys",
+    "source": "https://crates.io/api/v1/crates/rb-sys/0.9.130/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a.txt",
+        "sha256": "110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24.txt",
+        "sha256": "3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24"
+      }
+    ]
+  },
+  {
+    "name": "rb-sys-build",
+    "version": "0.9.130",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/oxidize-rb/rb-sys",
+    "source": "https://crates.io/api/v1/crates/rb-sys-build/0.9.130/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a.txt",
+        "sha256": "110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24.txt",
+        "sha256": "3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24"
+      }
+    ]
+  },
+  {
+    "name": "rb-sys-env",
+    "version": "0.2.3",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/oxidize-rb/rb-sys",
+    "source": "https://crates.io/api/v1/crates/rb-sys-env/0.2.3/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a.txt",
+        "sha256": "110a4b771805962e964448aed69e868cc3e9aec91e89c88b8598f8bd726d1d6a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24.txt",
+        "sha256": "3edf6db4f22b0da400397c3ffe917b3330f6cff051753ba02de9b40b4b8ccb24"
+      }
+    ]
+  },
+  {
+    "name": "regex",
+    "version": "1.13.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "source": "https://crates.io/api/v1/crates/regex/1.13.1/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "regex-automata",
+    "version": "0.4.18",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "source": "https://crates.io/api/v1/crates/regex-automata/0.4.18/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "regex-lite",
+    "version": "0.1.9",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "source": "https://crates.io/api/v1/crates/regex-lite/0.1.9/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "regex-syntax",
+    "version": "0.8.11",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/rust-lang/regex",
+    "source": "https://crates.io/api/v1/crates/regex-syntax/0.8.11/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb.txt",
+        "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb"
+      }
+    ]
+  },
+  {
+    "name": "rustc-hash",
+    "version": "2.1.3",
+    "license": "Apache-2.0 OR MIT",
+    "repository": "https://github.com/rust-lang/rustc-hash",
+    "source": "https://crates.io/api/v1/crates/rustc-hash/2.1.3/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/95bd3988beee069fa2848f648dab43cc6e0b2add2ad6bcb17360caf749802bcc.txt",
+        "sha256": "95bd3988beee069fa2848f648dab43cc6e0b2add2ad6bcb17360caf749802bcc"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652.txt",
+        "sha256": "30fefc3a7d6a0041541858293bcbea2dde4caa4c0a5802f996a7f7e8c0085652"
+      }
+    ]
+  },
+  {
+    "name": "seq-macro",
+    "version": "0.3.6",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/seq-macro",
+    "source": "https://crates.io/api/v1/crates/seq-macro/0.3.6/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    ]
+  },
+  {
+    "name": "shell-words",
+    "version": "1.1.1",
+    "license": "MIT/Apache-2.0",
+    "repository": "https://github.com/tmiasko/shell-words",
+    "source": "https://crates.io/api/v1/crates/shell-words/1.1.1/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/848d7bf14c618c39f1e29fcac2318a2fcc4254045ba7e2f6f5fa799e057225cb.txt",
+        "sha256": "848d7bf14c618c39f1e29fcac2318a2fcc4254045ba7e2f6f5fa799e057225cb"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/f76b7831ee8f42d3ac38919101e4ceb9f56aeb7796cdfe8a5ef52e26acedcbbf.txt",
+        "sha256": "f76b7831ee8f42d3ac38919101e4ceb9f56aeb7796cdfe8a5ef52e26acedcbbf"
+      }
+    ]
+  },
+  {
+    "name": "shlex",
+    "version": "1.3.0",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/comex/rust-shlex",
+    "source": "https://crates.io/api/v1/crates/shlex/1.3.0/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/553fffcd9b1cb158bc3e9edc35da85ca5c3b3d7d2e61c883ebcfa8a65814b583.txt",
+        "sha256": "553fffcd9b1cb158bc3e9edc35da85ca5c3b3d7d2e61c883ebcfa8a65814b583"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/4455bf75a91154108304cb283e0fea9948c14f13e20d60887cf2552449dea3b1.txt",
+        "sha256": "4455bf75a91154108304cb283e0fea9948c14f13e20d60887cf2552449dea3b1"
+      }
+    ]
+  },
+  {
+    "name": "smallvec",
+    "version": "1.16.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/servo/rust-smallvec",
+    "source": "https://crates.io/api/v1/crates/smallvec/1.16.1/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+        "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9.txt",
+        "sha256": "0b28172679e0009b655da42797c03fd163a3379d5cfa67ba1f1655e974a2a1a9"
+      }
+    ]
+  },
+  {
+    "name": "symphonia",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-bundle-flac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-bundle-flac/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-bundle-mp3",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-bundle-mp3/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-codec-aac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-codec-aac/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-codec-adpcm",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-codec-adpcm/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-codec-alac",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-codec-alac/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-codec-pcm",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-codec-pcm/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-codec-vorbis",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-codec-vorbis/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-common",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-common/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-core",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-core/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-format-caf",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-format-caf/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-format-isomp4",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-format-isomp4/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-format-mkv",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-format-mkv/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-format-ogg",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-format-ogg/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-format-riff",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-format-riff/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "symphonia-metadata",
+    "version": "0.6.1",
+    "license": "MPL-2.0",
+    "repository": "https://github.com/pdeljanov/Symphonia",
+    "source": "https://crates.io/api/v1/crates/symphonia-metadata/0.6.1/download",
+    "notices": [
+      {
+        "original": "LICENSE",
+        "file": "third-party/c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30.txt",
+        "sha256": "c76f740d1521b9bed9ca7a04ad526c310493c62621b1341d623b431736533b30"
+      }
+    ]
+  },
+  {
+    "name": "syn",
+    "version": "2.0.119",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/dtolnay/syn",
+    "source": "https://crates.io/api/v1/crates/syn/2.0.119/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      }
+    ]
+  },
+  {
+    "name": "unicode-ident",
+    "version": "1.0.26",
+    "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+    "repository": "https://github.com/dtolnay/unicode-ident",
+    "source": "https://crates.io/api/v1/crates/unicode-ident/1.0.26/download",
+    "notices": [
+      {
+        "original": "LICENSE-APACHE",
+        "file": "third-party/62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a.txt",
+        "sha256": "62c7a1e35f56406896d7aa7ca52d0cc0d272ac022b5d2796e7d6905db8a3636a"
+      },
+      {
+        "original": "LICENSE-MIT",
+        "file": "third-party/23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3.txt",
+        "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
+      },
+      {
+        "original": "LICENSE-UNICODE",
+        "file": "third-party/f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1.txt",
+        "sha256": "f7db81051789b729fea528a63ec4c938fdcb93d9d61d97dc8cc2e9df6d47f2a1"
+      }
+    ]
+  },
+  {
+    "name": "windows-link",
+    "version": "0.2.1",
+    "license": "MIT OR Apache-2.0",
+    "repository": "https://github.com/microsoft/windows-rs",
+    "source": "https://crates.io/api/v1/crates/windows-link/0.2.1/download",
+    "notices": [
+      {
+        "original": "license-apache-2.0",
+        "file": "third-party/c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b.txt",
+        "sha256": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+      },
+      {
+        "original": "license-mit",
+        "file": "third-party/c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383.txt",
+        "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+      }
+    ]
+  }
+]

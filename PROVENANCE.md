@@ -2,7 +2,8 @@
 
 This project was implemented on 2026-09-21 from the separately prepared
 behavior contract and newly generated test corpus. It implements the Rust
-core; no Ruby wrapper or release workflow has been copied or migrated.
+core. The reviewed personal Ruby integration was subsequently reused and
+adapted; see [its separate record](bindings/ruby/PROVENANCE.md).
 
 ## Inputs and process
 
@@ -20,9 +21,10 @@ core; no Ruby wrapper or release workflow has been copied or migrated.
   for validating a complete unknown-length WebM document at EOF.
 - Rust standard-library APIs and documentation.
 
-Production source, tests, manifests, and implementation documentation were
-written for this project. No old Rust/C++ implementation, old test helper,
-legacy recording, or golden output was copied into it. The old implementation
+The core production source, core tests, and initial implementation
+documentation were written for this project. No former core implementation,
+core test helper, legacy recording, or golden output was copied into the new
+core. The old implementation
 was not used as a numerical oracle. Codec media is generated from new numeric
 signals; the recipe, commands, tool version, and hashes are recorded in
 `tests/build_codec_fixtures.py` and the fixture manifests.
@@ -36,12 +38,14 @@ independence or ownership by themselves.
 
 ## License and distribution status
 
-Publishing is disabled. No permissive license is asserted yet, and no old GPL
+Publishing is disabled. The local Ruby prerelease is `0.3.0.pre.1`, with a
+`Nonstandard` marker and an explicit publishing-script guard; this marker does
+not grant a release license. No permissive license is asserted yet, and no old GPL
 code or release is relicensed by this project. Complete the source/provenance
 review and select the new project's license before distribution. Existing
 release licenses and source obligations remain independent of Git history.
 
-The only direct runtime dependency is Symphonia, under MPL-2.0. The locked
+The core's only direct runtime dependency is Symphonia, under MPL-2.0. The locked
 runtime/build graph contains MPL-2.0 Symphonia packages and dependencies with
 MIT, Apache-2.0, or Zlib alternatives; it has no dependency on the former crate.
 `serde_json` and `tempfile` are development-only test dependencies, not waveform
@@ -52,8 +56,25 @@ bundle dependency code.
 ## History cutover
 
 The user wants eventually to replace the existing remote history. This local
-project starts a new root history without modifying that remote. Before the
-cutover, finish Ruby integration, source/native packaging, license/notice
-review, and release checks. Preserve an accessible archive of old releases and
+project starts a new root history without modifying that remote. Ruby
+integration and local source/native package checks are recorded in
+[VALIDATION.md](VALIDATION.md). Before the cutover, finish license/notice review
+and the full cross-platform release checks. Preserve an accessible archive of
+old releases and
 their corresponding source. The remote branch replacement should be a
 deliberate cutover from the reviewed root, not a force-push from the old port.
+
+## Ruby dependency and packaging follow-up
+
+Ruby requires Magnus (MIT), rb-sys/rb-sys-env (MIT or Apache-2.0), and their
+locked dependencies, in addition to the unchanged decoder dependency. Exact
+crate versions, source locations, and original notices are recorded in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). The inventory includes build
+and target-conditional dependencies, not just code linked on this host.
+No vendored implementation of the former core is in either gem format.
+
+The retained Ruby GVL helper was adapted using the installed Ruby C headers,
+[Ruby's GVL/interrupt API documentation](https://docs.ruby-lang.org/capi/en/master/d6/dfb/include_2ruby_2thread_8h.html),
+and Magnus 0.8.2 public API/source. Array conversion uses Magnus's protected
+append API with a fixed stack buffer of immediate Ruby integers. It does not
+copy the old core's peak conversion or serializers.

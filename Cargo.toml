@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2024"
 publish = false
 description = "Streaming audio min/max peaks with exact point counts"
+exclude = ["/bindings", "/.github", "/sig", "/Gemfile", "/Rakefile", "/audiowaveform.gemspec"]
 
 [workspace]
+exclude = ["bindings/ruby"]
 
 [features]
 default = ["wav"]

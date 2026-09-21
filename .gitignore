@@ -1,3 +1,16 @@
 /target/
 /measurements/
 __pycache__/
+/bindings/ruby/target/
+/bindings/ruby/lib/audiowaveform/*.bundle
+/bindings/ruby/lib/audiowaveform/*.so
+/bindings/ruby/lib/audiowaveform/*.dll
+/bindings/ruby/lib/audiowaveform/[0-9]*/
+/bindings/ruby/ext/audiowaveform/Makefile
+/bindings/ruby/ext/audiowaveform/mkmf.log
+/bindings/ruby/ext/audiowaveform/*.bundle
+/bindings/ruby/ext/audiowaveform/*.so
+/.bundle/
+/pkg/
+/tmp/
+/Gemfile.lock

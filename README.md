@@ -6,8 +6,9 @@ package name; publishing is disabled and a release license has not been chosen.
 
 This standalone Cargo workspace has no dependency on the former library.
 It contains audio decoding and peak generation, with no waveform export,
-rendering, or production command-line interface. The Ruby binding is a
-subsequent integration step, not part of this implementation.
+rendering, or production command-line interface. A separately built Ruby
+extension under `bindings/ruby` exposes
+the same core; see [the Ruby guide](bindings/ruby/README.md).
 
 ## Use
 
@@ -54,7 +55,7 @@ There is no whole-audio buffer or temporary PCM spool.
 
 `generate_with_cancel` accepts a synchronous cancellation predicate, checked
 between packets, frame batches, repeated points, and normalization batches.
-It provides the hook for a future Ruby interruption handler. Processing panics
+The Ruby extension connects this hook to Ruby interrupts. Processing panics
 are contained as `Error::InternalPanic` when Rust unwinding is enabled; process
 aborts and allocation failures inside dependencies are not unwinding panics.
 
@@ -93,6 +94,8 @@ cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
 cargo test --no-default-features
+bundle install
+bundle exec rake # Ruby extension, contract/safety tests, and RBS
 python3 contract/conformance.py check
 python3 tests/measure_memory.py
 ```

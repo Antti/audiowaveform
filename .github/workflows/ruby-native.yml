@@ -1,0 +1,124 @@
+name: Ruby Native Gems
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/ruby*.yml"
+      - "bindings/ruby/**"
+      - "src/**"
+      - "tests/fixtures/**"
+      - "sig/**"
+      - "contract/**"
+      - "third-party/**"
+      - "LICENSE-STATUS.md"
+      - "THIRD-PARTY-NOTICES.md"
+      - "Cargo.*"
+      - "Gemfile"
+      - "Rakefile"
+      - "audiowaveform.gemspec"
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - x86_64-linux
+          - aarch64-linux
+          - x86_64-linux-musl
+          - aarch64-linux-musl
+          - x86_64-darwin
+          - arm64-darwin
+          - x64-mingw-ucrt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/rb-sys
+            tmp/rb-sys-dock
+          key: native-${{ matrix.platform }}-${{ hashFiles('Gemfile', '**/Cargo.lock') }}
+      - name: Cross-compile all supported Ruby versions
+        env:
+          TARGET_PLATFORM: ${{ matrix.platform }}
+        run: bundle exec rb-sys-dock --platform "$TARGET_PLATFORM" --ruby-versions 3.2,3.3,3.4,4.0 --build
+      - name: Validate native package
+        env:
+          TARGET_PLATFORM: ${{ matrix.platform }}
+        run: ruby bindings/ruby/script/check_release.rb pkg "$TARGET_PLATFORM"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audiowaveform-native-${{ matrix.platform }}
+          path: pkg/*.gem
+          if-no-files-found: error
+
+  test:
+    name: Install ${{ matrix.platform }} / Ruby ${{ matrix.ruby }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+        platform: [x86_64-linux, aarch64-linux, x86_64-darwin, arm64-darwin, x64-mingw-ucrt]
+        include:
+          - platform: x86_64-linux
+            os: ubuntu-22.04
+          - platform: aarch64-linux
+            os: ubuntu-24.04-arm
+          - platform: x86_64-darwin
+            os: macos-15-intel
+          - platform: arm64-darwin
+            os: macos-14
+          - platform: x64-mingw-ucrt
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: audiowaveform-native-${{ matrix.platform }}
+          path: pkg
+      - name: Install and exercise the packaged extension
+        run: ruby bindings/ruby/script/test_native_gem.rb
+
+  test-musl:
+    name: Install ${{ matrix.platform }} / Ruby ${{ matrix.ruby }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+        platform: [x86_64-linux-musl, aarch64-linux-musl]
+        include:
+          - platform: x86_64-linux-musl
+            os: ubuntu-22.04
+          - platform: aarch64-linux-musl
+            os: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: audiowaveform-native-${{ matrix.platform }}
+          path: pkg
+      - name: Install and exercise on Alpine without a build toolchain
+        env:
+          RUBY_VERSION: ${{ matrix.ruby }}
+        run: >-
+          docker run --rm -v "$PWD:/app:ro" -w /app
+          "ruby:${RUBY_VERSION}-alpine"
+          ruby bindings/ruby/script/test_native_gem.rb

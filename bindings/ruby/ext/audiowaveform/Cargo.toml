@@ -1,0 +1,19 @@
+[package]
+name = "audiowaveform-ruby"
+version = "0.1.0"
+edition = "2024"
+authors = ["Andrii Dmytrenko"]
+repository = "https://github.com/Antti/audiowaveform"
+publish = false
+
+[lib]
+name = "audiowaveform_ruby"
+crate-type = ["cdylib"]
+
+[dependencies]
+waveform-core = { path = "../../../..", default-features = false, features = ["all-formats"] }
+magnus = { version = "0.8.2", features = ["rb-sys"] }
+rb-sys = { version = "0.9.130", features = ["stable-api-compiled-fallback", "global-allocator"] }
+
+[build-dependencies]
+rb-sys-env = "0.2.3"

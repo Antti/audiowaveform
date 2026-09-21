@@ -1,0 +1,30 @@
+module AudioWaveform
+  VERSION: String
+
+  class Error < StandardError
+  end
+
+  def self.generate: (
+    path input,
+    ?samples_per_pixel: Integer?,
+    ?pixels_per_second: Integer?,
+    ?points: Integer?,
+    ?split_channels: bool,
+    ?amplitude_scale: (Numeric | :auto | "auto")?
+  ) -> Waveform
+
+  class Waveform
+    def sample_rate: () -> Integer
+    def samples_per_pixel: () -> Integer
+    def channels: () -> Integer
+    def storage_bits: () -> Integer
+    def bits: () -> Integer
+    def length: () -> Integer
+    def size: () -> Integer
+    def empty?: () -> bool
+    def duration: () -> Float
+    def duration_seconds: () -> Float
+    def data: (?bits: Integer) -> Array[Integer]
+    def point: (Integer index, ?channel: Integer) -> [Integer, Integer]
+  end
+end
