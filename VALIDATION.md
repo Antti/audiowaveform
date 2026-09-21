@@ -165,3 +165,22 @@ source length and a non-silent first bucket. Vorbis/Ogg and Vorbis/WebM likewise
 reject the leading priming buckets seen in 0.3.0, allowing their documented
 container-tail granularity. AAC/MP4 edit-list trimming remains a decoder
 limitation; this does not promise bit-identical legacy peaks.
+
+## Exact-point metadata fast path (unreleased)
+
+PCM/float WAV contract vectors and native FLAC now report one decoding pass
+for exact `points`, with unchanged literal peaks. AAC/M4A, MP3, ADPCM, Ogg,
+CAF/AIFF, and Matroska/WebM still report two passes. Live WebM's missing-duration
+case explicitly verifies that fallback.
+
+FLAC fixtures with missing or understated STREAMINFO sample counts produce
+identical output to the fast path in two passes, for fixed/normalized gain,
+mono/split output, and counts both below and above the input frame count.
+Truncated FLAC, overstated lengths reported as truncation, and failed decoded
+MD5 checks remain errors. WAV tests cover misleading filename extensions and
+bogus FACT counts; the optimization uses detected PCM data extents. Empty WAV
+with `points: u32::MAX` retains zero peak allocation.
+
+Rust all-feature/no-default-feature tests and strict Clippy pass, along with
+Ruby's 71 tests / 1,391 assertions and RBS validation. No Ruby API change is
+needed; `statistics().decode_passes` records the actual Rust decoding work.

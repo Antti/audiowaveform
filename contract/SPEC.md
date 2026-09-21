@@ -1,6 +1,6 @@
 # Audio peak generation contract, revision 2
 
-Updated after 0.3.0 for decoder gapless trimming and raw PCM streaming. Normative
+Updated after 0.3.0 for gapless trimming, raw PCM, and exact-count metadata. Normative
 requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
@@ -69,6 +69,17 @@ that open seekable file if needed. A second pass must agree on frame count,
 sample rate, and channel count; otherwise return an error. This does not promise
 to detect content edits that preserve those properties. Pipes, URLs, arbitrary
 Ruby IOs, and live input are outside this API.
+
+Exact point generation may use PCM/float WAV data extents or native FLAC
+STREAMINFO frame counts to aggregate in the first decoding pass. Validate the
+hint against the decoded signal and complete frame count. Do not trust generic
+container duration, compressed block counts, or delay-affected lossy counts.
+If metadata is absent or ineligible, count then replay. If an eligible hint
+mismatches, discard provisional peaks while finishing the counting pass, then
+replay using the observed count. Do not add a third counting pass or buffer the
+recording. Decoder errors and failed integrity checks remain fatal. This is a
+performance optimization only: peak values and bucket boundaries must match
+generation using the actual count.
 
 ### Raw PCM input
 

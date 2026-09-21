@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Generate exact `points:` in one decoding pass for PCM/float WAV and native
+  FLAC when an exact header frame count is available and verified. Other inputs
+  retain the two-pass path; mismatched counts replay using actual decoded length.
+
 - Enable decoder gapless trimming to remove the leading-delay regression in
   0.3.0 for MP3 and Vorbis/WebM. MP3 padding is also trimmed when reported.
 - Add `generate_pcm(io, format:, sample_rate:, channels:, samples_per_pixel:)`

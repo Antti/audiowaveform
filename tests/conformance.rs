@@ -109,14 +109,8 @@ fn all_contract_vectors_decode_to_literal_expectations() {
         }
         assert_eq!(waveform.point(usize::MAX, 0), None);
         assert_eq!(waveform.point(0, usize::MAX), None);
-        let passes = if matches!(options(&case["options"]).resolution, Resolution::Points(_))
-            && !waveform.is_empty()
-        {
-            2
-        } else {
-            1
-        };
-        assert_eq!(waveform.statistics().decode_passes, passes, "{id}");
+        // PCM/float WAV has an exact data extent: points need only one decode.
+        assert_eq!(waveform.statistics().decode_passes, 1, "{id}");
     }
 }
 
@@ -187,7 +181,7 @@ fn validation_precedes_file_access() {
 }
 
 #[test]
-fn cancellation_works_before_input_and_during_replay() {
+fn cancellation_works_before_input_and_during_generation() {
     assert!(matches!(
         generate_with_cancel(fixture("absent"), Options::default(), || true),
         Err(Error::Cancelled)
@@ -213,4 +207,19 @@ fn panics_cannot_escape_the_generation_boundary() {
         panic!("injected processing panic")
     });
     assert!(matches!(result, Err(Error::InternalPanic)));
+}
+
+#[test]
+fn empty_exact_output_does_not_reserve_the_requested_point_count() {
+    let waveform = generate(
+        fixture("empty"),
+        Options {
+            resolution: Resolution::Points(u32::MAX),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    assert!(waveform.is_empty());
+    assert_eq!(waveform.allocated_bytes(), 0);
+    assert_eq!(waveform.statistics().decode_passes, 1);
 }

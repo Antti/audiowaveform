@@ -26,9 +26,13 @@ waveform.duration            # actual decoded seconds
 | `amplitude_scale:` | `nil` uses gain 1; a finite nonnegative real Numeric applies gain; `:auto` or `"auto"` normalizes globally. |
 
 At most one resolution option may be non-nil. Each resolution is an Integer no
-larger than 4,294,967,295. Exact counts use two decoding passes on the same open
-file and do not require duration metadata. Keep the file unchanged during the
-operation. This method accepts regular seekable files. Use `generate_pcm` below
+larger than 4,294,967,295. Exact counts use one decoding pass for PCM/float WAV
+and native FLAC with an exact header frame count; the decoded count is verified.
+Other inputs use two passes on the same open file without requiring duration
+metadata. A mismatched header count discards provisional peaks and replays once
+using the count from that first pass. Decoding/corruption errors still fail.
+Results are unchanged, and no new keyword is required. Keep the file unchanged
+during the operation. This method accepts regular seekable files. Use `generate_pcm` below
 for raw PCM streams. Neither method fetches URLs.
 
 Decoding releases Ruby's GVL. Ruby interrupts request cooperative cancellation

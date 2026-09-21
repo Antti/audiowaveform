@@ -63,11 +63,19 @@ by Ruby and never run inside an unprotected native callback. See the
 
 ## Memory and cancellation
 
-Fixed resolution decodes once. Exact point counts count decoded frames and
-replay the same open file, without trusting duration estimates. Empty audio
-does not allocate the requested point count. Keep input files unchanged during
-generation; replay mismatches in frame count, track, rate, or channel count
-are errors.
+Fixed resolution decodes once. Exact point counts also decode once for PCM/float
+WAV and native FLAC with an exact header frame count. The count and signal
+metadata are checked against the actual decoded audio. Missing/unsupported
+metadata uses a counting pass and replay of the same open file. If a header
+count disagrees, provisional peaks are discarded and the completed first pass
+supplies the actual count for replay: at most two decoding passes. Decoder
+errors, checksum failures, and truncation remain errors.
+
+This optimization never uses duration estimates and preserves the same peak
+boundaries and values. AAC/M4A, MP3, Ogg/WebM and other formats still use the
+two-pass path for exact points. Empty audio does not allocate the requested
+point count. Keep input files unchanged during generation; replay mismatches
+in frame count, track, rate, or channel count are errors.
 
 A decoded-block scratch buffer and channel extrema are reused. Exact output
 capacity is reserved once. Fixed-resolution output grows geometrically as
