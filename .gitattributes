@@ -2,3 +2,5 @@
 third-party/*.txt -text -whitespace
 # The generated fixture manifest checksums this specification's exact bytes.
 contract/vectors.json text eol=lf
+# Even malformed audio fixtures can resemble text; their bytes are contractual.
+tests/fixtures/** -text
