@@ -1,6 +1,10 @@
 name: Ruby Native Gems
 
 on:
+  push:
+    branches: [master, main]
+    paths:
+      - ".github/workflows/ruby-native.yml"
   pull_request:
     paths:
       - ".github/workflows/ruby*.yml"
