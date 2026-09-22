@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 (2026-09-22)
 
 - Generate exact `points:` for nonfragmented AAC/MP4 in one decoding pass using
   parsed playback bounds and the decoder's resolved signal parameters. Verify
