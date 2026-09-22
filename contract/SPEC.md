@@ -1,6 +1,6 @@
-# Audio peak generation contract, revision 2
+# Audio peak generation contract, revision 3
 
-Updated for Ruby 0.4.0 with gapless trimming, raw PCM, and exact-count metadata. Normative
+Updated after Ruby 0.4.0 with AAC/MP4 playback trimming. Normative
 requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
@@ -11,8 +11,9 @@ PCM stream and returns waveform peaks in memory. A frame is one time instant con
 channel. A point is a minimum/maximum pair for each output channel. Resolution
 arguments count **frames**, despite the historical `samples_per_pixel` name.
 
-Let `N` be the actual number of decoded frames, `F` the positive sample rate,
-and `C` the output channel count. Container duration estimates must not determine
+Let `N` be the number of playback frames (retained decoded frames plus silence
+from supported leading empty edits), `F` the positive sample rate,
+and `C` the output channel count. General container duration estimates must not determine
 `N`, point boundaries, or the returned duration. Channel count and sample rate
 must remain constant throughout the selected track; otherwise return an error.
 
@@ -28,12 +29,34 @@ This is an acceptance target, not a claim of completed decoder coverage.
 Codec availability is distinct from container recognition. Multichannel AAC,
 HE-AAC, Opus, and Wave64 are not required for the first replacement.
 
-Enable decoder-provided gapless trimming. `N` counts frames actually delivered
-by the decoder after trimming; count and aggregation passes use identical
+Enable decoder-provided gapless trimming. Count and aggregation passes use identical
 settings. Do not manually subtract delay a second time. MP3 delay/padding and
 Vorbis priming must not create extra leading buckets. Available trimming depends
-on the codec/container metadata exposed by Symphonia; AAC/MP4 edit-list handling
-remains a documented limitation. Raw PCM receives no automatic trimming.
+on the codec/container metadata exposed by Symphonia, with this additional rule:
+nonfragmented AAC/MP4 uses the selected track's media timescale, time-to-sample
+table, and optional single unit-rate media edit, preceded by zero or more empty
+edits. Decode all packets, including priming,
+but retain only frames whose timestamps lie in that half-open playback range,
+capped at the sample table's end. Apply the same range in each pass. Never infer
+delay from silence or a fixed encoder-specific constant. Missing edits mean no
+assumed encoder delay. Sum leading empty-edit durations in movie ticks before
+converting to frames (rounding up), and prepend that many zero frames using
+bounded buffers. Those frames are part of `N`, duration, and bucket placement.
+Allow absolute packet timestamps to differ from decoded time by less than one
+media-clock tick, without accumulating that allowance per packet. A media end
+rounded beyond decoded audio by less than one tick is clamped to the actual
+end; larger shortages remain errors. Sample-rate clocks retain exact checks.
+Reject multiple media edits, empty edits after media, dwell/non-unit rates, and
+inconsistent packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
+metadata is not interpreted. Raw PCM receives no automatic trimming.
+
+For exact points, use parsed nonfragmented AAC/MP4 bounds to generate provisional
+peaks in one pass with `N = end - start + leading_frames`. Use the initialized
+decoder's sample rate and channel layout. Verify the observed playback count
+before returning those peaks. If a rounded endpoint overstates the count,
+discard provisional peaks and replay using the observed count; retain all
+decoding and timing checks, including after the playback range ends. Fragmented
+MP4 and raw ADTS AAC keep the two-pass path.
 
 ## 2. Ruby generation API
 

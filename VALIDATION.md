@@ -199,3 +199,83 @@ The Ruby 0.4.0 version bump passes 72 Ruby tests / 1,393 assertions and RBS
 validation. The built `audiowaveform-0.4.0.gem` installs into an isolated gem
 directory and passes the contract vectors, codec matrix, PCM streaming, and
 MP3 gapless checks. Both unpublished Rust packages remain at 0.1.0.
+
+## AAC/MP4 playback trimming (unreleased)
+
+Local all-feature, no-default-feature, and M4A-only Rust tests pass, along with
+formatting and strict all-target Clippy for both workspaces. Ten parser tests
+cover edit-list/header versions 0/1, different movie/media/sample clocks, selected
+track IDs, partial packet boundaries, malformed/truncated atoms and timing
+tables, unsupported edits, overflow, cancellation, and shared-file cursor
+restoration. Nine integration tests decode newly generated AAC fixtures and
+compare peaks with independent batch arithmetic over the known playback slice.
+
+The 44.1 kHz 50 ms fixture decodes to 4,096 raw frames but retains exactly 2,205
+frames and 110 points. Other cases cover 32/48/88.2/96 kHz, one-frame and odd-length
+clips, mono/stereo, fixed/normalized gain, direct 8-bit output, true silence and
+silent edges, changed edit offsets (including 2,112), empty playback, absent
+edits, coarse movie-clock rounding, video before multiple audio tracks,
+impossible sample-table lengths, and the documented fragmented-MP4 fallback.
+Exact points and fixed-size buckets both use the same trimmed frame range.
+
+The metadata reader uses fixed-size stack buffers and seeks past media; it
+retains neither packet tables nor decoded audio. A manual comparison of 50 ms
+and 30-second mono AAC at 44.1 kHz, each producing 110 points, reports identical
+application capacities: 8,192 bytes of sample scratch and 456 bytes of
+peak/current storage. Decoder/container allocations are outside these figures.
+
+Ruby 4.0.5 passes 73 tests / 1,689 assertions and RBS validation. An isolated
+source-gem installation passes the numeric/codec/PCM checks plus an AAC check
+requiring a 50 ms duration and 110 points at 44.1, 88.2, and 96 kHz. This is a
+local development build of the unchanged 0.4.0 package version, not a published
+release.
+
+The compatibility follow-up covers leading empty edits (including versions 0/1
+and summed movie-clock durations), coarse media timestamps with and without an
+edit, and a final media timestamp rounded beyond the decoded sample count.
+An FFmpeg start-offset remux now yields a 150 ms waveform including its leading
+silence. Both passes use that same timeline. Millisecond-clock fixtures retain
+the frames inside their declared ranges without failing exact-time equality;
+rounding past decoded EOF is clamped, while full-tick jumps, cumulative drift,
+and larger shortages still fail. Source-gem smoke tests exercise both fixes.
+
+Increasing a leading empty edit to ten seconds preserves application buffer
+capacities with fixed and normalized gain at 110 points. A much larger empty
+edit is cancelled during generation in both resolution modes, without building
+a whole-gap sample buffer. The original 50 ms regression remains covered.
+
+Playback bounds use the initialized AAC decoder's sample rate from
+AudioSpecificConfig, which can differ from the container sample-entry rate.
+The 88.2 and 96 kHz fixtures failed with `AAC/MP4 sample rate changed` before
+this correction. They now retain exactly 4,410 and 4,800 frames, respectively,
+with peaks checked in both resolution modes and installed-gem coverage.
+
+Exact points now use those parsed bounds as a verified frame-count hint. The
+AAC fixture matrix checks one decoding pass, including 88.2/96 kHz, leading
+gaps, empty playback, and selected tracks following video, with unchanged peaks.
+The rounded-media-end fixture predicts 4,102 frames but actually supplies 4,096;
+it still uses two passes and matches the independent oracle with fixed and
+normalized gain. Fragmented MP4 also retains two passes. A truncated final AAC
+packet fails even when all requested playback frames (or an empty range) were
+already delivered. Existing buffer-capacity and cancellation checks still pass.
+
+Release-build comparison against `193f789` on an arm64 Mac, 48 kHz AAC at
+128 kbit/s and 110 exact points, with warm caches and alternating before/after
+processes. Values are median library wall times from five paired trials (three
+for 30 minutes), excluding a warmup generation in each process:
+
+| Input | Two passes | Verified one pass |
+| --- | ---: | ---: |
+| 50 ms mono | 0.419 ms | 0.209 ms |
+| 30 seconds mono | 28.69 ms | 17.79 ms |
+| 5 minutes mono | 309.93 ms | 173.28 ms |
+| 30 minutes mono | 1,741.00 ms | 1,069.14 ms |
+| 5 minutes stereo, mixed to mono | 413.75 ms | 242.39 ms |
+| 5 minutes mono, normalized | 283.62 ms | 173.16 ms |
+
+Longer inputs took 38–44% less time in these local measurements. Fixed buckets
+remain one-pass and measured 176.43 vs. 174.75 ms for five minutes. Mono scratch
+and peak/current capacities remain 8,192 and 456 bytes; normalized peaks use
+2,216 bytes and stereo scratch uses 16,384 bytes. Maximum measured process RSS
+was about 3.9 MiB. These timings are host-specific, not isolated-system results
+or a constant-memory guarantee for decoder/container internals.

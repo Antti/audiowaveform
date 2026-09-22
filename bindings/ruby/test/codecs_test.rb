@@ -3,6 +3,30 @@
 require_relative "test_helper"
 
 class CodecsTest < Minitest::Test
+  def test_aac_mp4_uses_playback_duration_and_preserves_silence
+    directory = File.expand_path("../../../tests/fixtures/aac", __dir__)
+    manifest = JSON.parse(File.read(File.join(directory, "manifest.json")))
+    manifest.fetch("cases").reject { |entry| entry["fragmented"] }.each do |entry|
+      frames = entry.fetch("playback_frames", entry.fetch("frames"))
+      [{points: 110}, {samples_per_pixel: 23}].each do |options|
+        [false, true].each do |split|
+          w = AudioWaveform.generate(File.join(directory, entry.fetch("file")), split_channels: split, **options)
+          assert_equal entry.fetch("rate"), w.sample_rate, entry.fetch("file")
+          assert_equal frames.fdiv(entry.fetch("rate")), w.duration, entry.fetch("file")
+          assert_equal(options[:points] || (frames.fdiv(23)).ceil, w.length)
+          assert_equal(split ? entry.fetch("channels") : 1, w.channels)
+          assert_equal w.data.map { |value| (value.fdiv(256)).truncate }, w.data(bits: 8)
+          assert w.data.all?(&:zero?) if entry.fetch("signal") == "silence"
+          assert_equal [0, 0], w.point(0) if entry.fetch("leading_frames", 0) > 0
+          if entry.fetch("signal") == "edges"
+            assert_equal [0, 0], w.point(0)
+            assert_equal [0, 0], w.point(w.length - 1)
+          end
+        end
+      end
+    end
+  end
+
   def test_gapless_audio_has_no_leading_priming_buckets
     directory = File.expand_path("../../../tests/fixtures/codecs", __dir__)
     %w[audio.mp3 vorbis.ogg live.webm].each do |file|

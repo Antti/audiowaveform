@@ -25,6 +25,7 @@ impl Waveform {
     pub fn channels(&self) -> usize {
         self.channels
     }
+    /// Playback frames after trimming, including supported MP4 leading silence.
     pub fn source_frames(&self) -> u64 {
         self.source_frames
     }

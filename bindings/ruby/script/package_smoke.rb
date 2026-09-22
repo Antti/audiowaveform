@@ -76,6 +76,14 @@ module PackageSmoke
         abort "PCM stream failed" unless waveform.data == [-300, 400, -500, 600, 7, 7] && !pcm.closed?
         mp3 = AudioWaveform.generate(File.join(codec_root, "audio.mp3"), points: 110)
         abort "MP3 delay/padding retained" unless mp3.duration == 0.25 && mp3.point(0).first < -8000
+        [44_100, 88_200, 96_000].each do |rate|
+          aac = AudioWaveform.generate(File.join(repository, "tests/fixtures/aac/short-#{rate}.m4a"), points: 110)
+          abort "AAC playback timing failed at #{rate} Hz" unless aac.sample_rate == rate && aac.duration == 0.05 && aac.length == 110
+        end
+        aac_offset = AudioWaveform.generate(File.join(repository, "tests/fixtures/aac/offset.m4a"), points: 110)
+        abort "AAC leading edit failed" unless aac_offset.duration == 0.15 && aac_offset.point(0) == [0, 0]
+        aac_coarse = AudioWaveform.generate(File.join(repository, "tests/fixtures/aac/rounded-media-end.m4a"), points: 110)
+        abort "AAC rounded timing failed" unless aac_coarse.duration == 4096.fdiv(44100) && aac_coarse.length == 110
         puts "Installed #{Gem.loaded_specs.fetch('audiowaveform').full_name}: 36 vectors and codec matrix passed on Ruby #{RUBY_VERSION}"
       CODE
     end

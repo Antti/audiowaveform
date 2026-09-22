@@ -27,10 +27,12 @@ waveform.duration            # actual decoded seconds
 
 At most one resolution option may be non-nil. Each resolution is an Integer no
 larger than 4,294,967,295. Exact counts use one decoding pass for PCM/float WAV
-and native FLAC with an exact header frame count; the decoded count is verified.
-Other inputs use two passes on the same open file without requiring duration
-metadata. A mismatched header count discards provisional peaks and replays once
-using the count from that first pass. Decoding/corruption errors still fail.
+and native FLAC with an exact header frame count, and nonfragmented AAC/MP4
+with parsed playback bounds. The actual playback count is verified. Other inputs
+use two passes on the same open file without requiring duration metadata.
+A mismatched count, including AAC timestamp rounding beyond decoded EOF,
+discards provisional peaks and replays once using the count from that first
+pass. Decoding/corruption errors still fail.
 Results are unchanged, and no new keyword is required. Keep the file unchanged
 during the operation. This method accepts regular seekable files. Use `generate_pcm` below
 for raw PCM streams. Neither method fetches URLs.
@@ -104,7 +106,8 @@ at EOF and nonfinite float samples raise `AudioWaveform::Error`.
 - `sample_rate`, `channels`, `length` (`size`), `empty?`
 - `samples_per_pixel`: nominal frames per point. For exact-count timing use
   `duration / length`; bucket widths may differ by one source frame.
-- `duration` (`duration_seconds`): decoded frames divided by sample rate.
+- `duration` (`duration_seconds`): playback frames divided by sample rate,
+  including silence from supported leading empty MP4 edits.
 - `storage_bits` (`bits`): always 16.
 - `data(bits: 16)`: a new Array of signed integers, ordered by point, channel,
   then minimum/maximum. `bits: 8` converts with signed truncation by 256.
@@ -123,9 +126,15 @@ AAC/M4A, ALAC, MP1/MP2/MP3, AIFF, CAF, and Matroska/WebM audio codecs. Container
 recognition does not imply every codec is supported. Multichannel AAC, HE-AAC,
 Opus, and Wave64 are unsupported by file decoding; a caller-managed decoder can
 feed their PCM into `generate_pcm`. Decoder gapless trimming removes reported
-delay/padding, including MP3 and Vorbis priming. AAC/MP4 trimming remains limited
-by Symphonia, so decoded duration can differ from playback. See the root README
-for track-selection limits.
+delay/padding, including MP3 and Vorbis priming. Nonfragmented AAC/MP4 also trims
+to the selected track's single, normal-speed media edit and sample timing range
+in both passes. Leading empty edits contribute silence before the audio;
+intentional recorded silence is preserved. Rounded media timestamps are
+supported, though coarse metadata may still round duration slightly.
+Fragmented MP4 and iTunSMPB-only delay metadata remain unsupported for gapless
+trimming. Multiple media edits, empty edits after media, or non-unit playback
+rates raise `AudioWaveform::Error`; use external decoding and `generate_pcm`
+for those inputs. See the root README for track-selection limits.
 
 Version 0.3 removes exports and tightens argument coercion. PCM quantization and
 fixed-resolution duration also change; do not expect byte-identical 0.2 peaks.

@@ -8,8 +8,8 @@ use symphonia::core::{
     codecs::audio::{
         AudioDecoder, AudioDecoderOptions,
         well_known::{
-            CODEC_ID_FLAC, CODEC_ID_PCM_F32LE, CODEC_ID_PCM_F64LE, CODEC_ID_PCM_S16LE,
-            CODEC_ID_PCM_S24LE, CODEC_ID_PCM_S32LE, CODEC_ID_PCM_U8,
+            CODEC_ID_AAC, CODEC_ID_FLAC, CODEC_ID_PCM_F32LE, CODEC_ID_PCM_F64LE,
+            CODEC_ID_PCM_S16LE, CODEC_ID_PCM_S24LE, CODEC_ID_PCM_S32LE, CODEC_ID_PCM_U8,
         },
     },
     formats::{FormatReader, TrackFlags, TrackType, probe::Hint},
@@ -52,16 +52,18 @@ fn generate_inner(
     #[cfg(feature = "wav")]
     crate::wave_header::validate(&mut file, &mut cancelled)?;
     file.seek(SeekFrom::Start(0))?;
+    let metadata = file.try_clone()?;
     let stream = MediaSourceStream::new(Box::new(file), Default::default());
     let mut hint = Hint::new();
     if let Some(extension) = path.extension().and_then(|ext| ext.to_str()) {
         hint.with_extension(extension);
     }
-    let session = Session::open(stream, &hint)?;
+    let mut source = Source { hint, metadata };
+    let session = Session::open(stream, &mut source, &mut cancelled)?;
     let mut scratch = Vec::new();
     let (reducer, decode_passes) = match options.resolution {
         Resolution::Points(_) => {
-            reduce_points(session, options, &hint, &mut scratch, &mut cancelled)?
+            reduce_points(session, options, &mut source, &mut scratch, &mut cancelled)?
         }
         _ => (
             reduce_fixed(session, options, &mut scratch, &mut cancelled)?,
@@ -97,12 +99,12 @@ fn reduce_fixed(
 fn reduce_points(
     session: Session,
     options: Options,
-    hint: &Hint,
+    source: &mut Source,
     scratch: &mut Vec<f64>,
     cancelled: &mut impl FnMut() -> bool,
 ) -> Result<(Reducer, u8), Error> {
     let mut provisional = session
-        .exact_frame_count()
+        .frame_count_hint()
         .map(|expected| ProvisionalPoints {
             expected,
             reducer: None,
@@ -133,7 +135,7 @@ fn reduce_points(
     if counted.frames == 0 {
         return Ok((reducer, 1));
     }
-    replay(stream, hint, counted, &mut reducer, scratch, cancelled)?;
+    replay(stream, source, counted, &mut reducer, scratch, cancelled)?;
     Ok((reducer, 2))
 }
 
@@ -164,7 +166,7 @@ impl ProvisionalPoints {
 
 fn replay(
     mut stream: MediaSourceStream<'static>,
-    hint: &Hint,
+    source: &mut Source,
     counted: Scan,
     reducer: &mut Reducer,
     scratch: &mut Vec<f64>,
@@ -172,7 +174,7 @@ fn replay(
 ) -> Result<(), Error> {
     poll(cancelled)?;
     stream.seek(SeekFrom::Start(0))?;
-    let session = Session::open(stream, hint)?;
+    let session = Session::open(stream, source, cancelled)?;
     let (_, generated) = session.scan(scratch, cancelled, |progress, samples, cancel| {
         if progress.signal != counted.signal {
             return Err(Error::InputChanged);
@@ -192,16 +194,61 @@ struct Scan {
     track: u32,
 }
 
+fn resize_scratch(scratch: &mut Vec<f64>, size: usize) -> Result<(), Error> {
+    if size > scratch.len() {
+        scratch.try_reserve(size - scratch.len())?;
+    }
+    scratch.resize(size, 0.0);
+    Ok(())
+}
+
+/// Advance the playback timeline through empty edits using the same bounded
+/// buffer as decoded audio, including during the counting pass and replay.
+fn consume_silence<C: FnMut() -> bool>(
+    mut progress: Scan,
+    remaining: &mut u64,
+    scratch: &mut Vec<f64>,
+    cancelled: &mut C,
+    consume: &mut impl FnMut(Scan, &[f64], &mut C) -> Result<(), Error>,
+) -> Result<u64, Error> {
+    while *remaining > 0 {
+        poll(cancelled)?;
+        let count = (*remaining).min(1024) as usize;
+        let size = count
+            .checked_mul(progress.signal.channels)
+            .ok_or(Error::SizeOverflow)?;
+        resize_scratch(scratch, size)?;
+        scratch.fill(0.0);
+        progress.frames = progress
+            .frames
+            .checked_add(count as u64)
+            .ok_or(Error::SizeOverflow)?;
+        consume(progress, scratch, cancelled)?;
+        *remaining -= count as u64;
+    }
+    Ok(progress.frames)
+}
+
+struct Source {
+    hint: Hint,
+    metadata: File,
+}
+
 struct Session {
+    playback: Option<crate::mp4::Playback>,
     format: Box<dyn FormatReader>,
     decoder: Box<dyn AudioDecoder>,
     track: u32,
 }
 
 impl Session {
-    fn open(stream: MediaSourceStream<'static>, hint: &Hint) -> Result<Self, Error> {
+    fn open(
+        stream: MediaSourceStream<'static>,
+        source: &mut Source,
+        cancelled: &mut impl FnMut() -> bool,
+    ) -> Result<Self, Error> {
         let format = symphonia::default::get_probe().probe(
-            hint,
+            &source.hint,
             stream,
             Default::default(),
             Default::default(),
@@ -227,23 +274,57 @@ impl Session {
             .as_ref()
             .and_then(|params| params.audio())
             .ok_or(Error::InvalidAudio("missing audio codec parameters"))?;
+        let aac_mp4 = format.format_info().short_name == "isomp4" && params.codec == CODEC_ID_AAC;
         let decoder = symphonia::default::get_codecs().make_audio_decoder(
             params,
-            &AudioDecoderOptions::default().gapless(true).verify(true),
+            // This layer owns AAC/MP4 trimming, including the untrimmed fallback
+            // for fragmented files. Other codecs keep the decoder's gapless mode.
+            &AudioDecoderOptions::default()
+                .gapless(!aac_mp4)
+                .verify(true),
         )?;
+        let playback = if aac_mp4 {
+            crate::mp4::playback(
+                &mut source.metadata,
+                track.id,
+                // AudioSpecificConfig can override the container sample-entry
+                // rate, notably above the 16.16 field's 65,535 Hz limit.
+                decoder
+                    .codec_params()
+                    .sample_rate
+                    .filter(|rate| *rate > 0)
+                    .ok_or(Error::InvalidAudio("AAC/MP4 has no sample rate"))?,
+                cancelled,
+            )?
+        } else {
+            None
+        };
         let track = track.id;
         Ok(Self {
+            playback,
             format,
             decoder,
             track,
         })
     }
 
-    /// Only native FLAC STREAMINFO and WAV PCM data extents have been audited
-    /// as exact frame counts here. Container durations, ADPCM block counts,
-    /// and counts affected by lossy codec delay/padding are not trusted.
-    /// Even these hints are checked against all frames actually decoded.
-    fn exact_frame_count(&self) -> Option<Scan> {
+    /// Audited counts from WAV PCM extents, native FLAC STREAMINFO, or parsed
+    /// AAC/MP4 playback bounds. Every hint is checked against actual playback
+    /// frames before returning peaks; other container durations are not used.
+    fn frame_count_hint(&self) -> Option<Scan> {
+        if let Some(playback) = self.playback {
+            // Use the decoder's resolved channel layout, just as playback
+            // bounds use its sample rate instead of the container entry's.
+            let channels = self.decoder.codec_params().channels.as_ref()?.count();
+            return (channels > 0).then_some(Scan {
+                signal: Signal {
+                    rate: playback.rate,
+                    channels,
+                },
+                frames: playback.frame_count(),
+                track: self.track,
+            });
+        }
         let track = self
             .format
             .tracks()
@@ -285,6 +366,8 @@ impl Session {
     ) -> Result<(MediaSourceStream<'static>, Scan), Error> {
         let mut observed = None;
         let mut frames = 0_u64;
+        let mut decoded_frames = 0_u64;
+        let mut leading = self.playback.map_or(0, |playback| playback.leading_frames);
         let mut demux_error = None;
         loop {
             poll(cancelled)?;
@@ -314,17 +397,40 @@ impl Session {
                 return Err(Error::InvalidAudio("sample rate or channel count changed"));
             }
             observed = Some(signal);
+            let range = match self.playback {
+                Some(playback) => {
+                    if signal.rate != playback.rate {
+                        return Err(Error::InvalidAudio("AAC/MP4 sample rate changed"));
+                    }
+                    playback.slice(decoded_frames, decoded.frames(), packet.pts.get())?
+                }
+                None => 0..decoded.frames(),
+            };
+            decoded_frames = decoded_frames
+                .checked_add(u64::try_from(decoded.frames()).map_err(|_| Error::SizeOverflow)?)
+                .ok_or(Error::SizeOverflow)?;
+            frames = consume_silence(
+                Scan {
+                    signal,
+                    frames,
+                    track: self.track,
+                },
+                &mut leading,
+                scratch,
+                cancelled,
+                &mut consume,
+            )?;
+            if range.is_empty() {
+                continue;
+            }
             let size = decoded
                 .frames()
                 .checked_mul(signal.channels)
                 .ok_or(Error::SizeOverflow)?;
-            if size > scratch.len() {
-                scratch.try_reserve(size - scratch.len())?;
-            }
-            scratch.resize(size, 0.0);
+            resize_scratch(scratch, size)?;
             decoded.copy_to_slice_interleaved(scratch.as_mut_slice());
             frames = frames
-                .checked_add(u64::try_from(decoded.frames()).map_err(|_| Error::SizeOverflow)?)
+                .checked_add(u64::try_from(range.len()).map_err(|_| Error::SizeOverflow)?)
                 .ok_or(Error::SizeOverflow)?;
             consume(
                 Scan {
@@ -332,7 +438,7 @@ impl Session {
                     frames,
                     track: self.track,
                 },
-                scratch,
+                &scratch[range.start * signal.channels..range.end * signal.channels],
                 cancelled,
             )?;
         }
@@ -374,6 +480,22 @@ impl Session {
                 Signal { rate, channels }
             }
         };
+        // Empty media may still have a declared leading gap and valid signal
+        // metadata; emit that timeline even when no decoder block was returned.
+        frames = consume_silence(
+            Scan {
+                signal,
+                frames,
+                track: self.track,
+            },
+            &mut leading,
+            scratch,
+            cancelled,
+            &mut consume,
+        )?;
+        if let Some(playback) = self.playback {
+            playback.verify(decoded_frames, frames)?;
+        }
         Ok((
             stream,
             Scan {

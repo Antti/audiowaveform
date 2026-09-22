@@ -64,17 +64,18 @@ by Ruby and never run inside an unprotected native callback. See the
 ## Memory and cancellation
 
 Fixed resolution decodes once. Exact point counts also decode once for PCM/float
-WAV and native FLAC with an exact header frame count. The count and signal
-metadata are checked against the actual decoded audio. Missing/unsupported
-metadata uses a counting pass and replay of the same open file. If a header
-count disagrees, provisional peaks are discarded and the completed first pass
-supplies the actual count for replay: at most two decoding passes. Decoder
-errors, checksum failures, and truncation remain errors.
+WAV and native FLAC with an exact header frame count, and for nonfragmented
+AAC/MP4 with parsed playback bounds. The count and signal metadata are checked
+against the actual playback frames. Missing/unsupported metadata uses a counting
+pass and replay of the same open file. If a count disagrees (including an AAC
+media end rounded past decoded EOF), provisional peaks are discarded and the
+completed first pass supplies the actual count for replay: at most two decoding
+passes. Decoder errors, checksum failures, and truncation remain errors.
 
-This optimization never uses duration estimates and preserves the same peak
-boundaries and values. AAC/M4A, MP3, Ogg/WebM and other formats still use the
-two-pass path for exact points. Empty audio does not allocate the requested
-point count. Keep input files unchanged during generation; replay mismatches
+This optimization preserves the same peak boundaries and values. Raw ADTS AAC,
+fragmented MP4, MP3, Ogg/WebM and other formats still use the two-pass path for
+exact points. Empty audio does not allocate the requested point count. Keep
+input files unchanged during generation; replay mismatches
 in frame count, track, rate, or channel count are errors.
 
 A decoded-block scratch buffer and channel extrema are reused. Exact output
@@ -104,8 +105,22 @@ AAC-LC decoding targets mono/stereo. Multichannel AAC, HE-AAC, Opus, and Wave64
 are outside this revision. Codec availability is separate from container
 recognition. Decoder gapless trimming is enabled, removing delay/padding where
 Symphonia supplies it (including MP3 and Vorbis priming). Duration counts the
-frames actually delivered after trimming. AAC/MP4 edit-list trimming is still
-limited by the decoder, so AAC duration can differ from playback.
+playback frames retained after trimming, including silence from supported
+leading empty MP4 edits.
+
+For nonfragmented AAC/MP4, the core reads the selected track's edit list and
+sample timing table. It decodes priming packets normally, then excludes frames
+outside the playback range before counting or aggregating peaks in either pass.
+This supports leading empty edits followed by a single contiguous media edit
+at normal speed. Empty edits contribute silence on the playback timeline;
+genuine recorded silence is also preserved. Edit duration uses the movie
+timescale, and packet timestamps may be rounded by less than one media-clock
+tick. The sample table and available decoded frames cap the end. Coarse
+metadata can still round the reported playback duration.
+No edit means no assumed leading delay. Fragmented MP4 and iTunSMPB-only delay
+metadata are not covered; their duration can still differ from playback.
+Multiple media edits, empty edits after media, and non-unit playback rates
+return an error; decode those inputs to PCM externally and use `generate_pcm`.
 
 Track selection uses explicit default-audio flags exposed by Symphonia, then
 the first reported audio track. Unsupported selected audio is an error.

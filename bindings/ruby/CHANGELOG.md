@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- Generate exact `points:` for nonfragmented AAC/MP4 in one decoding pass using
+  parsed playback bounds and the decoder's resolved signal parameters. Verify
+  the actual count before returning peaks; rounded endpoints that overstate it
+  replay with the observed count. Fragmented MP4 and raw ADTS retain two passes.
+- Trim AAC/MP4 priming and padding from the selected track's edit list and
+  sample timing before counting frames or generating peaks. A 50 ms clip now
+  produces a 50 ms waveform with either exact points or fixed-size buckets.
+  Use the decoder's resolved sample rate, including 88.2 and 96 kHz AAC.
+  Keep streaming buffers and genuine silence; do not guess encoder delay.
+- Support leading empty edits followed by one contiguous, normal-speed media
+  edit in nonfragmented MP4. Render the leading gap as silence with bounded
+  buffers. Accept media-clock timestamp rounding without tolerating cumulative
+  drift or padding past the available decoded samples. Other complex edits
+  return an error; fragmented MP4 and iTunSMPB-only gapless metadata remain
+  outside this support.
+
 ## 0.4.0 (2026-09-21)
 
 - Generate exact `points:` in one decoding pass for PCM/float WAV and native
