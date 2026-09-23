@@ -23,7 +23,7 @@ pub(crate) struct Playback {
     timescale: u32,
     start: u64,
     end: u64,
-    minimum_decoded_frames: u64,
+    minimum_media_frames: u64,
     pub leading_frames: u64,
 }
 
@@ -36,36 +36,76 @@ impl Playback {
         self.end - self.start + self.leading_frames
     }
 
-    pub fn slice(self, position: u64, frames: usize, pts: i64) -> Result<Range<usize>, Error> {
+    /// Place decoded samples on the media timeline. A short sample-table slot
+    /// clips the packet's tail; a long slot leaves silence before the next
+    /// packet. Never fill an unverified trailing gap at EOF.
+    pub fn packet(
+        self,
+        position: u64,
+        decoded: usize,
+        pts: i64,
+        duration: u64,
+    ) -> Result<PacketSlice, Error> {
         let timestamp = u64::try_from(pts).map_err(|_| INVALID)?;
-        // Packet boundaries may be rounded to media-clock ticks. Compare each
-        // absolute timestamp with decoded time, allowing less than one tick;
-        // do not accumulate a per-packet allowance that could hide real drift.
-        if (u128::from(timestamp) * u128::from(self.rate))
-            .abs_diff(u128::from(position) * u128::from(self.timescale))
-            >= u128::from(self.rate)
-        {
-            return Err(Error::InvalidAudio("non-contiguous AAC/MP4 sample timing"));
+        let start = self.boundary(timestamp, position)?;
+        if start < position {
+            return Err(Error::InvalidAudio("backwards AAC/MP4 sample timing"));
         }
-        let length = u64::try_from(frames).map_err(|_| Error::SizeOverflow)?;
-        Ok(self.start.saturating_sub(position).min(length) as usize
-            ..self.end.saturating_sub(position).min(length) as usize)
+        let decoded_end = start
+            .checked_add(u64::try_from(decoded).map_err(|_| Error::SizeOverflow)?)
+            .ok_or(Error::SizeOverflow)?;
+        let timestamp_end = timestamp.checked_add(duration).ok_or(Error::SizeOverflow)?;
+        let end = self
+            .boundary(timestamp_end, decoded_end)?
+            .min(decoded_end)
+            .max(start);
+        Ok(PacketSlice {
+            silence: self.end.min(start).saturating_sub(self.start.max(position)),
+            samples: self.slice(start, end - start),
+            end,
+        })
     }
 
-    pub fn verify(self, decoded: u64, retained: u64) -> Result<(), Error> {
+    fn boundary(self, timestamp: u64, expected: u64) -> Result<u64, Error> {
+        // Preserve continuous PCM when absolute boundaries differ by less than
+        // one media-clock tick. Comparing absolute times avoids accumulating a
+        // per-packet rounding allowance or independently rounding durations.
+        if (u128::from(timestamp) * u128::from(self.rate))
+            .abs_diff(u128::from(expected) * u128::from(self.timescale))
+            < u128::from(self.rate)
+        {
+            Ok(expected)
+        } else {
+            frames(u128::from(timestamp), self.timescale, self.rate)
+        }
+    }
+
+    fn slice(self, position: u64, length: u64) -> Range<usize> {
+        // Only called for decoded buffers, so length already fits usize.
+        self.start.saturating_sub(position).min(length) as usize
+            ..self.end.saturating_sub(position).min(length) as usize
+    }
+
+    pub fn verify(self, media_end: u64, retained: u64) -> Result<(), Error> {
         // A coarse final timestamp can round slightly beyond the decoded end.
         // Clamp to the frames actually available, never synthesize AAC padding.
         let expected = self
             .end
-            .min(decoded)
+            .min(media_end)
             .saturating_sub(self.start)
             .checked_add(self.leading_frames)
             .ok_or(Error::SizeOverflow)?;
-        if decoded < self.minimum_decoded_frames || retained != expected {
+        if media_end < self.minimum_media_frames || retained != expected {
             return Err(Error::InvalidAudio("truncated AAC/MP4 playback range"));
         }
         Ok(())
     }
+}
+
+pub(crate) struct PacketSlice {
+    pub silence: u64,
+    pub samples: Range<usize>,
+    pub end: u64,
 }
 
 /// `file` is a duplicate of the decoder's open file description. Restore its
@@ -187,9 +227,9 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
         if start > end {
             return Err(INVALID);
         }
-        // Require decoded time to lie strictly after the preceding media tick.
+        // Require available media to extend strictly past the preceding media tick.
         // With a sample-rate clock this still requires every declared frame.
-        let minimum_decoded_frames = if media_duration == 0 {
+        let minimum_media_frames = if media_duration == 0 {
             0
         } else {
             u64::try_from(
@@ -207,7 +247,7 @@ impl<R: Read + Seek, C: FnMut() -> bool> Parser<'_, R, C> {
             timescale: media_scale,
             start,
             end,
-            minimum_decoded_frames,
+            minimum_media_frames,
             leading_frames,
         }))
     }

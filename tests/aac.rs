@@ -112,7 +112,19 @@ fn playback_frames_and_peaks_exclude_only_the_declared_delay_and_padding() {
             .as_u64()
             .unwrap_or_else(|| case["frames"].as_u64().unwrap()) as usize;
         let rate = case["rate"].as_u64().unwrap() as u32;
-        let decoded = raw(&path);
+        let mut decoded = raw(&path);
+        if let Some(durations) = case["packet_frames"].as_array() {
+            // Fixture slots are known independently of the demuxer: retain
+            // each packet's prefix and fill its excess duration with zeros.
+            let mut timed = Vec::new();
+            assert_eq!(decoded.len(), durations.len() * 1024 * channels);
+            for (packet, duration) in decoded.chunks_exact(1024 * channels).zip(durations) {
+                let duration = duration.as_u64().unwrap() as usize;
+                timed.extend_from_slice(&packet[..duration.min(1024) * channels]);
+                timed.resize(timed.len() + duration.saturating_sub(1024) * channels, 0.0);
+            }
+            decoded = timed;
+        }
         let start = case["media_start"].as_u64().unwrap_or(1024) as usize;
         let leading = case["leading_frames"].as_u64().unwrap_or(0) as usize;
         let mut audible = vec![0.0; leading * channels];
@@ -334,7 +346,7 @@ fn completing_the_playback_range_does_not_skip_later_decode_errors() {
 }
 
 #[test]
-fn coarse_media_clock_does_not_hide_missing_packets_or_real_timestamp_jumps() {
+fn coarse_media_clock_keeps_real_overlaps_but_rejects_truncated_end() {
     let original = std::fs::read(fixture("rounded-media-end.m4a")).unwrap();
     let table = atom(
         &original,
@@ -346,16 +358,20 @@ fn coarse_media_clock_does_not_hide_missing_packets_or_real_timestamp_jumps() {
         let file = tempfile::NamedTempFile::new().unwrap();
         std::fs::write(file.path(), bytes).unwrap();
         for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(23)] {
-            assert!(
-                generate(
-                    file.path(),
-                    Options {
-                        resolution,
-                        ..Options::default()
-                    }
-                )
-                .is_err()
-            );
+            let options = Options {
+                resolution,
+                ..Options::default()
+            };
+            let result = generate(file.path(), options);
+            if offset == 28 {
+                assert!(result.is_err());
+            } else {
+                let decoded = raw(file.path());
+                let audible = [&decoded[..971], &decoded[1024..1994], &decoded[2048..]].concat();
+                let waveform = result.unwrap();
+                assert_eq!(waveform.source_frames(), 3989);
+                assert_eq!(waveform.data16(), expected(&audible, 1, options));
+            }
         }
     }
 }
@@ -404,5 +420,51 @@ fn leading_silence_reuses_buffers_and_remains_cancellable() {
             },
         );
         assert!(matches!(result, Err(waveform_core::Error::Cancelled)));
+    }
+}
+
+#[test]
+fn timestamp_gaps_reuse_buffers_and_remain_cancellable() {
+    let original = std::fs::read(fixture("gap.m4a")).unwrap();
+    let table = atom(
+        &original,
+        &[*b"moov", *b"trak", *b"mdia", *b"minf", *b"stbl", *b"stts"],
+    );
+    let edit = atom(&original, &[*b"moov", *b"trak", *b"edts", *b"elst"]);
+    let file = tempfile::NamedTempFile::new().unwrap();
+    for duration in [480_000_u32, u32::MAX - 2400] {
+        let mut bytes = original.clone();
+        bytes[table + 20..table + 24].copy_from_slice(&duration.to_be_bytes());
+        bytes[edit + 8..edit + 12].copy_from_slice(&(duration + 1376).to_be_bytes());
+        std::fs::write(file.path(), bytes).unwrap();
+        if duration == 480_000 {
+            for gain in [Gain::Fixed(1.0), Gain::Normalize] {
+                let options = Options {
+                    resolution: Resolution::Points(110),
+                    gain,
+                    ..Options::default()
+                };
+                let short = generate(fixture("gap.m4a"), options).unwrap();
+                let long = generate(file.path(), options).unwrap();
+                assert_eq!(long.source_frames(), 481_376);
+                assert_eq!(long.statistics(), short.statistics());
+            }
+        } else {
+            for resolution in [Resolution::Points(110), Resolution::FramesPerPoint(256)] {
+                let mut polls = 0;
+                let result = waveform_core::generate_with_cancel(
+                    file.path(),
+                    Options {
+                        resolution,
+                        ..Options::default()
+                    },
+                    || {
+                        polls += 1;
+                        polls == 500
+                    },
+                );
+                assert!(matches!(result, Err(waveform_core::Error::Cancelled)));
+            }
+        }
     }
 }

@@ -279,3 +279,30 @@ and peak/current capacities remain 8,192 and 456 bytes; normalized peaks use
 2,216 bytes and stereo scratch uses 16,384 bytes. Maximum measured process RSS
 was about 3.9 MiB. These timings are host-specific, not isolated-system results
 or a constant-memory guarantee for decoder/container internals.
+
+## AAC packet timing follow-up (unreleased)
+
+AAC/MP4 now places decoded packets in their declared sample-table slots:
+short slots clip packet tails, and gaps before a subsequent packet contribute
+silence. Sub-tick rounding preserves continuous PCM, while an overstated final
+packet duration still fails validation. Existing AAC fixture peaks are unchanged.
+
+Owned synthetic fixtures cover the 712/1,000-frame overlap pattern, a 5,120-frame
+gap, and mixed gaps/overlaps in stereo. Exact-count and fixed-resolution peaks,
+mono/split output, both gains, and both bit depths match an independent batch
+oracle. Larger gaps reuse buffer capacities and remain cancellable. Real timing
+changes on a coarse media clock are accepted without hiding truncated tails.
+
+Local validation on macOS arm64 with Rust 1.98.1 and Ruby 4.0.5 passes:
+all-feature and no-default-feature Rust tests, formatting, strict Clippy in both
+Cargo workspaces, and Ruby/RBS checks (73 tests, 1,749 assertions).
+
+A privately supplied failing voice recording was transcoded with FFmpeg's AAC
+encoder using `-map_metadata -1 -vn -c:a aac -q:a 2`. Version 0.4.1 rejects its
+non-contiguous timestamps. The patched core returns 609,264 frames at 48 kHz
+(12.693 seconds), 110 points, and one decode pass with 8,192 bytes of scratch.
+All 220 peaks match an independent FFmpeg decode after removing the two
+surplus packet tails (312 and 24 samples), at 8 and 16 bits with fixed gain and
+normalization. Unadjusted FFmpeg PCM is 7 ms longer; its 8-bit peaks differ in
+9 of 220 values at fixed gain (8 when normalized), by at most 4. The recording
+and its derived media remain outside the repository.

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Accept AAC/MP4 packet timing overlaps and gaps, including browser recordings
+  transcoded to AAC. Clip packets to shorter timing slots and render gaps as
+  silence with bounded, cancellable buffers. Preserve edit-list delay/padding
+  trimming, coarse-clock rounding, and truncated-tail validation. Continuous
+  inputs retain their existing peaks; valid exact-point counts use one pass.
+
 ## 0.4.1 (2026-09-22)
 
 - Generate exact `points:` for nonfragmented AAC/MP4 in one decoding pass using

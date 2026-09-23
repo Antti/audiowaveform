@@ -103,6 +103,45 @@ for name, end, with_edit, media_start, playback_frames in [
     cases.append(dict(file=name, rate=44100, frames=2205, channels=1, signal="tone",
                       media_start=media_start, playback_frames=playback_frames))
 
+def sample_timing(data, durations):
+    """Keep synthetic AAC packets, replacing only their sample-table slots.
+
+    As above, moov follows mdat, so resizing stts preserves chunk offsets.
+    Short slots reproduce 712/1000-frame browser-recording overlaps; long
+    slots reproduce timestamp gaps. No production recording is included.
+    """
+    result, position = bytearray(), 0
+    end = sum(durations)
+    while position < len(data):
+        size, kind = struct.unpack_from(">I4s", data, position)
+        assert size >= 8
+        payload = bytearray(data[position + 8:position + size])
+        if kind in (b"moov", b"trak", b"mdia", b"minf", b"stbl", b"edts"):
+            payload = sample_timing(payload, durations)
+        elif kind in (b"mdhd", b"mvhd"):
+            payload[16:20] = struct.pack(">I", end if kind == b"mdhd" else end - 1024)
+        elif kind == b"tkhd":
+            payload[20:24] = struct.pack(">I", end - 1024)
+        elif kind == b"elst":
+            payload[8:16] = struct.pack(">Ii", end - 1024, 1024)
+        elif kind == b"stts":
+            payload = bytes(4) + struct.pack(">I", len(durations))
+            payload += b"".join(struct.pack(">II", 1, duration) for duration in durations)
+        result.extend(struct.pack(">I4s", len(payload) + 8, kind) + payload)
+        position += size
+    return result
+
+
+for name, source, durations, channels in [
+    ("overlap.m4a", "short-48000.m4a", [1024, 712, 1000, 352], 1),
+    ("gap.m4a", "short-48000.m4a", [1024, 6144, 1024, 352], 1),
+    ("mixed-stereo.m4a", "silent-edges.m4a",
+     [1024, 712, 1024, 1024, 1024, 6144, 1000, 1024, 1024, 1024, 1024, 1024, 736], 2),
+]:
+    (ROOT / name).write_bytes(sample_timing((ROOT / source).read_bytes(), durations))
+    cases.append(dict(file=name, rate=48000, frames=sum(durations) - 1024,
+                      channels=channels, signal="timed-tone", packet_frames=durations))
+
 manifest = dict(
     provenance="New arithmetic sine/silence signals encoded with FFmpeg; no legacy fixtures or waveform output used.",
     recipe="Signed 16-bit sine: int(12000*sin(2*pi*frequency*frame/rate)); mono 440 Hz, stereo 440/880 Hz. Edges silence first/last thirds.",

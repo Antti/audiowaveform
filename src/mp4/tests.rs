@@ -81,19 +81,73 @@ fn versions_clocks_and_selected_track() {
         ));
         let bounds = parse(&movie(version, 1000, &tracks), 7, 44100).unwrap();
         assert_eq!(
-            (bounds.start, bounds.end, bounds.minimum_decoded_frames),
+            (bounds.start, bounds.end, bounds.minimum_media_frames),
             (1024, 3229, 3229)
         );
-        assert_eq!(bounds.slice(0, 1024, 0).unwrap(), 1024..1024);
-        assert_eq!(bounds.slice(1024, 1024, 2048).unwrap(), 0..1024);
-        assert_eq!(bounds.slice(3072, 1024, 6144).unwrap(), 0..157);
-        assert_eq!(bounds.slice(4096, 1024, 8192).unwrap(), 0..0);
-        assert!(bounds.slice(1024, 1024, 1024).is_err());
-        assert!(bounds.slice(0, 1024, -1).is_err());
+        assert_eq!(bounds.slice(0, 1024), 1024..1024);
+        assert_eq!(bounds.slice(1024, 1024), 0..1024);
+        assert_eq!(bounds.slice(3072, 1024), 0..157);
+        assert_eq!(bounds.slice(4096, 1024), 0..0);
+        assert!(bounds.packet(1024, 1024, 1024, 2048).is_err());
+        assert!(bounds.packet(0, 1024, -1, 2048).is_err());
         assert!(bounds.verify(4096, 2205).is_ok());
         assert!(bounds.verify(3072, 2205).is_err());
         assert!(bounds.verify(4096, 2204).is_err());
     }
+}
+
+#[test]
+fn packet_slots_clip_overlaps_and_fill_only_observed_gaps() {
+    let timing = [(1, 1024), (1, 712), (1, 6144), (1, 1000), (1, 352)];
+    let bytes = movie(
+        0,
+        48000,
+        &track(1, 0, 48000, &timing, &edit(0, &[(8208, 1024, 65536)])),
+    );
+    let bounds = parse(&bytes, 1, 48000).unwrap();
+    let mut position = 0;
+    let mut retained = 0;
+    for (pts, duration, samples, silence, end) in [
+        (0, 1024, 1024..1024, 0, 1024),
+        (1024, 712, 0..712, 0, 1736),
+        (1736, 6144, 0..1024, 0, 2760),
+        (7880, 1000, 0..1000, 5120, 8880),
+        (8880, 352, 0..352, 0, 9232),
+    ] {
+        let part = bounds.packet(position, 1024, pts, duration).unwrap();
+        assert_eq!(
+            (part.samples.clone(), part.silence, part.end),
+            (samples, silence, end)
+        );
+        position = part.end;
+        retained += part.silence + part.samples.len() as u64;
+    }
+    assert!(bounds.verify(position, retained).is_ok());
+    // The last decoded packet cannot invent a trailing gap to satisfy metadata.
+    assert!(bounds.verify(2760, 1736).is_err());
+    assert!(bounds.packet(1024, 1024, -1, 1024).is_err());
+    assert!(bounds.packet(1024, 1024, 0, 1024).is_err());
+    assert!(matches!(
+        bounds.packet(1024, 1024, 1024, u64::MAX),
+        Err(Error::SizeOverflow)
+    ));
+
+    // An edit entirely inside a gap retains only that portion of silence.
+    let bytes = movie(
+        0,
+        48000,
+        &track(1, 0, 48000, &timing, &edit(0, &[(500, 3500, 65536)])),
+    );
+    let bounds = parse(&bytes, 1, 48000).unwrap();
+    let part = bounds.packet(2760, 1024, 7880, 1000).unwrap();
+    assert_eq!(part.silence, 500);
+    assert!(part.samples.is_empty());
+
+    // A zero-duration slot is decoded for AAC state but contributes no samples.
+    let part = bounds.packet(1024, 1024, 1024, 0).unwrap();
+    assert_eq!(part.end, 1024);
+    assert_eq!(part.silence, 0);
+    assert!(part.samples.is_empty());
 }
 
 #[test]
@@ -105,7 +159,7 @@ fn edit_end_is_added_before_rounding_and_can_cut_within_a_packet() {
     );
     let bounds = parse(&bytes, 1, 10).unwrap();
     assert_eq!((bounds.start, bounds.end), (4, 5)); // ceil(10/3), ceil(10/3 + 1)
-    assert_eq!(bounds.slice(0, 10, 0).unwrap(), 4..5);
+    assert_eq!(bounds.slice(0, 10), 4..5);
 }
 
 #[test]
@@ -204,15 +258,15 @@ fn rounded_media_timestamps_allow_less_than_one_tick_without_accumulating_drift(
     );
     let bounds = parse(&bytes, 1, 44100).unwrap();
     for (position, timestamp) in [(0, 0), (1024, 23), (2048, 46), (3072, 70)] {
-        assert!(bounds.slice(position, 1024, timestamp).is_ok());
+        assert_eq!(bounds.boundary(timestamp, position).unwrap(), position);
     }
-    assert!(bounds.slice(1024, 1024, 24).is_ok()); // rounded upward
-    assert!(bounds.slice(1024, 1024, 22).is_err());
-    assert!(bounds.slice(1024, 1024, 25).is_err());
-    assert!(bounds.slice(44100, 1024, 1001).is_err()); // exactly one tick
-    assert!(bounds.slice(3072, 1024, 69).is_ok());
-    assert!(bounds.slice(4096, 1024, 92).is_ok());
-    assert!(bounds.slice(5120, 1024, 115).is_err()); // repeated 23-tick drift
+    assert_eq!(bounds.boundary(24, 1024).unwrap(), 1024); // rounded upward
+    assert_eq!(bounds.boundary(22, 1024).unwrap(), 971);
+    assert_eq!(bounds.boundary(25, 1024).unwrap(), 1103);
+    assert_eq!(bounds.boundary(1001, 44100).unwrap(), 44145); // one tick
+    assert_eq!(bounds.boundary(69, 3072).unwrap(), 3072);
+    assert_eq!(bounds.boundary(92, 4096).unwrap(), 4096);
+    assert_eq!(bounds.boundary(115, 5120).unwrap(), 5072); // real drift
     assert_eq!(bounds.end, 3220);
     assert!(bounds.verify(4096, 3220).is_ok());
 }
