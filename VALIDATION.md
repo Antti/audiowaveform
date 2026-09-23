@@ -280,7 +280,7 @@ and peak/current capacities remain 8,192 and 456 bytes; normalized peaks use
 was about 3.9 MiB. These timings are host-specific, not isolated-system results
 or a constant-memory guarantee for decoder/container internals.
 
-## AAC packet timing follow-up (unreleased)
+## AAC packet timing follow-up (Ruby 0.4.2)
 
 AAC/MP4 now places decoded packets in their declared sample-table slots:
 short slots clip packet tails, and gaps before a subsequent packet contribute
