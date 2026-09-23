@@ -309,6 +309,54 @@
       "signal": "tone",
       "media_start": 1015,
       "playback_frames": 2205
+    },
+    {
+      "file": "overlap.m4a",
+      "rate": 48000,
+      "frames": 2064,
+      "channels": 1,
+      "signal": "timed-tone",
+      "packet_frames": [
+        1024,
+        712,
+        1000,
+        352
+      ]
+    },
+    {
+      "file": "gap.m4a",
+      "rate": 48000,
+      "frames": 7520,
+      "channels": 1,
+      "signal": "timed-tone",
+      "packet_frames": [
+        1024,
+        6144,
+        1024,
+        352
+      ]
+    },
+    {
+      "file": "mixed-stereo.m4a",
+      "rate": 48000,
+      "frames": 16784,
+      "channels": 2,
+      "signal": "timed-tone",
+      "packet_frames": [
+        1024,
+        712,
+        1024,
+        1024,
+        1024,
+        6144,
+        1000,
+        1024,
+        1024,
+        1024,
+        1024,
+        1024,
+        736
+      ]
     }
   ],
   "sha256": {
@@ -316,9 +364,12 @@
     "coarse-media-edit.m4a": "e62b977178f0424dddc8247c4988e1b49d5299d13f1217aecadf2b0dea43b4bb",
     "coarse-movie-clock.m4a": "ed859c61f91d14705d2af4c7fc45115922fc0e059041e439d3c2941cc1f6d3cf",
     "fragmented.m4a": "1daf4b0b58d3bb0a093603c591c90d49e59b61aeb17e482c5c9170440fdc76df",
+    "gap.m4a": "ae1e1e33743a79ebb050cd9c209a0d63ee7e52dbc349a2d244614c199112ebfb",
+    "mixed-stereo.m4a": "fff036c43bcdaef6f3bbb3fc26176d64df042f5ed25e5430f753113ea0d2e2d0",
     "odd.m4a": "91848ab432a0efc0d3d3898b69fa63b1098556bb769ad828f5ce65ef3ffcdc7b",
     "offset.m4a": "47e3f10801b1bd6f60762394d1f734dcfe773e7b6bfb648570316b121377d34b",
     "one.m4a": "46b8c5115416dd7b9eefbd4360a4109ec961c3a082ddfe101fa93c7ab57be3ad",
+    "overlap.m4a": "11aa91df13d663b4aa5fa4e93533301d255661cba5a54b11e4451650baa14812",
     "rounded-media-end.m4a": "e475888ec8d05a4fcdf65a0aa7543dc37f7b2df98d2f01d9e456319eb822ad94",
     "short-32000.m4a": "9d6bc68de9733c91f217b22eae062683cf46bbefd9f7f07c1ae26a00453a5af5",
     "short-44100.m4a": "9c192436067b8426974122e3d38fdcce804749c0d97efdcfdde80047faf34039",

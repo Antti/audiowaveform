@@ -202,7 +202,7 @@ fn resize_scratch(scratch: &mut Vec<f64>, size: usize) -> Result<(), Error> {
     Ok(())
 }
 
-/// Advance the playback timeline through empty edits using the same bounded
+/// Advance the playback timeline through silence using the same bounded
 /// buffer as decoded audio, including during the counting pass and replay.
 fn consume_silence<C: FnMut() -> bool>(
     mut progress: Scan,
@@ -366,8 +366,8 @@ impl Session {
     ) -> Result<(MediaSourceStream<'static>, Scan), Error> {
         let mut observed = None;
         let mut frames = 0_u64;
-        let mut decoded_frames = 0_u64;
-        let mut leading = self.playback.map_or(0, |playback| playback.leading_frames);
+        let mut media_end = 0_u64;
+        let mut silence = self.playback.map_or(0, |playback| playback.leading_frames);
         let mut demux_error = None;
         loop {
             poll(cancelled)?;
@@ -402,20 +402,27 @@ impl Session {
                     if signal.rate != playback.rate {
                         return Err(Error::InvalidAudio("AAC/MP4 sample rate changed"));
                     }
-                    playback.slice(decoded_frames, decoded.frames(), packet.pts.get())?
+                    let part = playback.packet(
+                        media_end,
+                        decoded.frames(),
+                        packet.pts.get(),
+                        packet.dur.get(),
+                    )?;
+                    media_end = part.end;
+                    silence = silence
+                        .checked_add(part.silence)
+                        .ok_or(Error::SizeOverflow)?;
+                    part.samples
                 }
                 None => 0..decoded.frames(),
             };
-            decoded_frames = decoded_frames
-                .checked_add(u64::try_from(decoded.frames()).map_err(|_| Error::SizeOverflow)?)
-                .ok_or(Error::SizeOverflow)?;
             frames = consume_silence(
                 Scan {
                     signal,
                     frames,
                     track: self.track,
                 },
-                &mut leading,
+                &mut silence,
                 scratch,
                 cancelled,
                 &mut consume,
@@ -488,13 +495,13 @@ impl Session {
                 frames,
                 track: self.track,
             },
-            &mut leading,
+            &mut silence,
             scratch,
             cancelled,
             &mut consume,
         )?;
         if let Some(playback) = self.playback {
-            playback.verify(decoded_frames, frames)?;
+            playback.verify(media_end, frames)?;
         }
         Ok((
             stream,

@@ -113,7 +113,11 @@ sample timing table. It decodes priming packets normally, then excludes frames
 outside the playback range before counting or aggregating peaks in either pass.
 This supports leading empty edits followed by a single contiguous media edit
 at normal speed. Empty edits contribute silence on the playback timeline;
-genuine recorded silence is also preserved. Edit duration uses the movie
+genuine recorded silence is also preserved. Short packet timing slots clip
+surplus decoded samples from that packet's tail; gaps between packets contribute
+silence. This handles recording timestamp jitter without rejecting valid audio.
+Gaps are emitted only when the next packet arrives, so an overstated final
+packet duration still fails validation. Edit duration uses the movie
 timescale, and packet timestamps may be rounded by less than one media-clock
 tick. The sample table and available decoded frames cap the end. Coarse
 metadata can still round the reported playback duration.

@@ -129,8 +129,10 @@ feed their PCM into `generate_pcm`. Decoder gapless trimming removes reported
 delay/padding, including MP3 and Vorbis priming. Nonfragmented AAC/MP4 also trims
 to the selected track's single, normal-speed media edit and sample timing range
 in both passes. Leading empty edits contribute silence before the audio;
-intentional recorded silence is preserved. Rounded media timestamps are
-supported, though coarse metadata may still round duration slightly.
+intentional recorded silence is preserved. Short packet timing slots trim the
+packet's tail, and gaps between packets contribute silence. Rounded media
+timestamps are supported, though coarse metadata may still round duration
+slightly. An overstated final packet duration still raises an error.
 Fragmented MP4 and iTunSMPB-only delay metadata remain unsupported for gapless
 trimming. Multiple media edits, empty edits after media, or non-unit playback
 rates raise `AudioWaveform::Error`; use external decoding and `generate_pcm`

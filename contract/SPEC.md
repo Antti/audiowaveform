@@ -1,6 +1,6 @@
 # Audio peak generation contract, revision 3
 
-Updated after Ruby 0.4.0 with AAC/MP4 playback trimming. Normative
+Updated after Ruby 0.4.1 with AAC/MP4 playback timing. Normative
 requirements below apply to the library. No BBC command-line, file-format,
 rendering, or byte-for-byte implementation compatibility is required.
 
@@ -12,7 +12,7 @@ channel. A point is a minimum/maximum pair for each output channel. Resolution
 arguments count **frames**, despite the historical `samples_per_pixel` name.
 
 Let `N` be the number of playback frames (retained decoded frames plus silence
-from supported leading empty edits), `F` the positive sample rate,
+from supported leading empty edits and gaps between AAC/MP4 packets), `F` the positive sample rate,
 and `C` the output channel count. General container duration estimates must not determine
 `N`, point boundaries, or the returned duration. Channel count and sample rate
 must remain constant throughout the selected track; otherwise return an error.
@@ -43,11 +43,16 @@ assumed encoder delay. Sum leading empty-edit durations in movie ticks before
 converting to frames (rounding up), and prepend that many zero frames using
 bounded buffers. Those frames are part of `N`, duration, and bucket placement.
 Allow absolute packet timestamps to differ from decoded time by less than one
-media-clock tick, without accumulating that allowance per packet. A media end
-rounded beyond decoded audio by less than one tick is clamped to the actual
-end; larger shortages remain errors. Sample-rate clocks retain exact checks.
-Reject multiple media edits, empty edits after media, dwell/non-unit rates, and
-inconsistent packet timing. Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
+media-clock tick, without accumulating that allowance per packet. Outside that
+rounding tolerance, clip decoded packets to shorter sample-table slots and fill
+gaps before subsequent packets with silence, using bounded, cancellable buffers.
+Convert absolute boundaries to frames by rounding up. Apply playback-range
+trimming to both samples and silence. Never synthesize an unverified trailing
+gap: a media end rounded beyond available audio by less than one tick is clamped
+to the actual end; larger shortages remain errors. Sample-rate clocks retain
+exact checks. Reject multiple media edits, empty edits after media, dwell/non-unit
+rates, negative timestamps, and backwards timing beyond the rounding tolerance.
+Fragmented MP4 retains the decoder timeline; iTunSMPB-only delay
 metadata is not interpreted. Raw PCM receives no automatic trimming.
 
 For exact points, use parsed nonfragmented AAC/MP4 bounds to generate provisional
