@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.2 (2026-09-23)
 
 - Accept AAC/MP4 packet timing overlaps and gaps, including browser recordings
   transcoded to AAC. Clip packets to shorter timing slots and render gaps as

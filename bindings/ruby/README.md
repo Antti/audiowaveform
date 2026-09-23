@@ -156,7 +156,7 @@ ruby bindings/ruby/script/test_native_gem.rb PATH_TO_NATIVE_GEM
 
 The normal rake task compiles, runs contract/codec/GC/cancellation tests, and
 validates RBS. Source installation is checked with
-`ruby bindings/ruby/script/test_source_gem.rb pkg/audiowaveform-0.4.1.gem`.
+`ruby bindings/ruby/script/test_source_gem.rb pkg/audiowaveform-0.4.2.gem`.
 Native cross-builds and ABI checks are configured in `.github/workflows`.
 
 Release tags use `ruby-vX.Y.Z`. The release workflow verifies the tag against
